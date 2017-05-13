@@ -40,6 +40,7 @@ function preload() {
  var time = 0;
  var music;
  var judge = true;
+ var text;
 
 function generateMap(){
     for(var i=0;i<20;i++){
@@ -56,15 +57,17 @@ function generateMap(){
 }
 
 function gameOver(name){
-var text = game.add.bitmapText(400, 300, 'desyrel','GameOver'+'\n'+name+' '+'wins', 64);
-    text.anchor.x = 0.5;
-    text.anchor.y = 0.5;
+    text.text = 'GameOver'+'\n'+name+' '+'wins';
 }
 
 function create() {
     music = game.add.audio('boden');
 
     music.play();
+
+    text = game.add.bitmapText(400, 300, 'desyrel','', 64);
+    text.anchor.x = 0.5;
+    text.anchor.y = 0.5;
 
     //  We're going to be using physics, so enable the Arcade Physics system
     game.physics.startSystem(Phaser.Physics.ARCADE);
