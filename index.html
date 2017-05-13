@@ -21,6 +21,7 @@ function preload() {
     game.load.spritesheet('leaf','assets/autumn_leaves_PNG3576.png');
     game.load.image('bomb','assets/bomb.png');
     game.load.image('tile','assets/tile.png');
+    game.load.audio('boden','assets/battleThemeA.mp3');
 }
 
  var platforms;
@@ -36,6 +37,7 @@ function preload() {
  var map;
  var layer;
  var time = 0;
+ var music;
 
 function generateMap(){
     for(var i=0;i<20;i++){
@@ -44,7 +46,7 @@ function generateMap(){
         }
     }
     
-    for(var i = 0;i<=10;i++){
+    for(var i = 0;i<=25;i++){
     map.putTile(0, Math.floor(Math.random()*20), Math.floor(Math.random()*13+2), layer);
     }
 
@@ -52,7 +54,9 @@ function generateMap(){
 }
 
 function create() {
+    music = game.add.audio('boden');
 
+    music.play();
 
     //  We're going to be using physics, so enable the Arcade Physics system
     game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -71,7 +75,7 @@ function create() {
 
     //  Scale it to fit the width of the game (the original sprite is 400x32 in size)
     ground.scale.setTo(2, 2);
-    ground.tint = 0xff0000;
+    ground.tint = 0x006799;
     //  This stops it from falling away when you jump on it
     ground.body.immovable = true;
 
@@ -145,7 +149,7 @@ function create() {
     for (var i = 0; i < 2; i++)
     {
         //  Create a bomb inside of the 'stars' group
-        var bomb = bombs.create(i * 70, 0, 'bomb');
+        var bomb = bombs.create(200+Math.random()*400, 0, 'bomb');
 
         //  Let gravity do its thing
         bomb.body.gravity.y = 20;
