@@ -22,6 +22,7 @@ function preload() {
     game.load.image('bomb','assets/bomb.png');
     game.load.image('tile','assets/tile.png');
     game.load.audio('boden','assets/battleThemeA.mp3');
+    game.load.bitmapFont('desyrel', 'assets/desyrel.png', 'assets/desyrel.xml');
 }
 
  var platforms;
@@ -38,6 +39,7 @@ function preload() {
  var layer;
  var time = 0;
  var music;
+ var judge = true;
 
 function generateMap(){
     for(var i=0;i<20;i++){
@@ -51,6 +53,12 @@ function generateMap(){
     }
 
     map.setCollisionByExclusion([],true,layer);
+}
+
+function gameOver(name){
+var text = game.add.bitmapText(400, 300, 'desyrel','GameOver'+'\n'+name+' '+'wins', 64);
+    text.anchor.x = 0.5;
+    text.anchor.y = 0.5;
 }
 
 function create() {
@@ -168,6 +176,7 @@ function create() {
 
 
 function update() {
+   
  //  Collide the player and the stars with the platforms
     var hitPlatform = game.physics.arcade.collide(player, platforms);
 //  Reset the players velocity (movement)
@@ -253,11 +262,19 @@ function update() {
 
     // Removes the star from the screen
     player.kill();
+    judge = false;
 
-console.log("Vi");
     }
     game.physics.arcade.collide(bombs, platforms);
     game.physics.arcade.collide(bombs, leaf);
+
+    if(score >= 120){
+    
+    gameOver('Guy');
+    }
+    else if(judge === false){
+    gameOver('Leaf');
+    }
 
 }
 
