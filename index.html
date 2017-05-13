@@ -20,6 +20,7 @@ function preload() {
     game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
     game.load.spritesheet('leaf','assets/autumn_leaves_PNG3576.png');
     game.load.image('bomb','assets/bomb.png');
+    game.load.image('tile','assets/tile.png');
 }
 
  var platforms;
@@ -32,8 +33,26 @@ function preload() {
  var ledge1;
  var ledge2;
  var bombs;
+ var map;
+ var layer;
+ var time = 0;
+
+function generateMap(){
+    for(var i=0;i<20;i++){
+        for(var j = 0;j<15;j++){
+            map.removeTile(i,j,layer);
+        }
+    }
+    
+    for(var i = 0;i<=10;i++){
+    map.putTile(0, Math.floor(Math.random()*20), Math.floor(Math.random()*13+2), layer);
+    }
+
+    map.setCollisionByExclusion([],true,layer);
+}
 
 function create() {
+
 
     //  We're going to be using physics, so enable the Arcade Physics system
     game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -56,8 +75,13 @@ function create() {
     //  This stops it from falling away when you jump on it
     ground.body.immovable = true;
 
+    map = game.add.tilemap();
+    map.addTilesetImage('tile');
+    layer = map.create('level1', 40, 30, 32, 32);
+
+    generateMap();
     //  Now let's create two ledges
-    ledge1 = platforms.create(400, 400, 'ground');
+   /* ledge1 = platforms.create(400, 400, 'ground');
 
     ledge1.body.immovable = true;
     ledge1.body.velocity.x = 30;
@@ -67,7 +91,7 @@ function create() {
 
     ledge2.body.immovable = true;
     ledge2.body.velocity.x = -30;
-    ledge2.tint = 0x54eeff;
+    ledge2.tint = 0x54eeff;*/
 
      // The player and its settings
     player = game.add.sprite(32, game.world.height - 150, 'dude');
@@ -144,6 +168,16 @@ function update() {
     var hitPlatform = game.physics.arcade.collide(player, platforms);
 //  Reset the players velocity (movement)
     cursors = game.input.keyboard.createCursorKeys();
+
+    var hitTile = game.physics.arcade.collide(player, layer);
+
+    time = time + game.time.physicsElapsed;
+
+    if(time >= 10){
+        generateMap();
+        time= time-10;
+    }
+
     
     player.body.velocity.x = 0;
 
@@ -170,7 +204,7 @@ function update() {
     }
 
     //  Allow the player to jump if they are touching the ground.
-    if (cursors.up.isDown && player.body.touching.down && hitPlatform)
+    if (cursors.up.isDown  && (hitPlatform||hitTile))
     {
         player.body.velocity.y = -400;
     }
@@ -198,14 +232,16 @@ function update() {
     }
     game.physics.arcade.collide(leaf, platforms);
     game.physics.arcade.collide(leaf, stars);
+    game.physics.arcade.collide(stars, layer);
+    game.physics.arcade.collide(bombs, layer);
 
-    if(ledge1.body.position.x >= game.world.width){
+    /*if(ledge1.body.position.x >= game.world.width){
         ledge1.body.position.x = -ledge1.width;
     }
 
     if(ledge2.body.position.x <= -ledge2.width){
         ledge2.body.position.x = game.world.width;
-    }
+    }*/
 
     game.physics.arcade.overlap(player, bombs, killPlayer, null, this);
     
