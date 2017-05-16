@@ -11,21 +11,19 @@
 
     window.onload = function() {
 
-    var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
-
-function preload() {
-    game.load.image('sky', 'assets/sky.png');
-    game.load.image('ground', 'assets/platform.png');
-    game.load.image('star', 'assets/star.png');
-    game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
-    game.load.spritesheet('leaf','assets/autumn_leaves_PNG3576.png');
-    game.load.image('bomb','assets/bomb.png');
-    game.load.image('tile','assets/tile.png');
-    game.load.audio('boden','assets/battleThemeA.mp3');
-    game.load.bitmapFont('desyrel', 'assets/desyrel.png', 'assets/desyrel.xml');
+    game = new Phaser.Game(800, 600, Phaser.AUTO, '');
+    
+    game.state.add('Preloader', BasicGame.Preloader);
+    game.state.add('MainMenu', BasicGame.MainMenu); 
+    game.state.add('Game', BasicGame.Game); 
+    game.state.start('Preloader'); 
 }
 
- var platforms;
+var BasicGame = { 
+};
+
+var game;
+var platforms;
  var player;
  var cursors;
  var stars;
@@ -41,6 +39,61 @@ function preload() {
  var music;
  var judge = true;
  var text;
+
+    BasicGame.Preloader = function(game) { 
+ 
+    this.background = null;  
+
+    this.preloadBar = null; 
+    }; 
+
+    BasicGame.Preloader.prototype = { 
+        preload: function() {
+        this.load.image('sky', 'assets/sky.png');
+    this.load.image('ground', 'assets/platform.png');
+    this.load.image('star', 'assets/star.png');
+    this.load.spritesheet('dude', 'assets/dude.png', 32, 48);
+    this.load.spritesheet('leaf','assets/autumn_leaves_PNG3576.png');
+    this.load.image('bomb','assets/bomb.png');
+    this.load.image('tile','assets/tile.png');
+    this.load.audio('boden','assets/battleThemeA.mp3');
+    this.load.bitmapFont('desyrel', 'assets/desyrel.png', 'assets/desyrel.xml');},
+        create: function() {
+            music = game.add.audio('boden');
+            this.state.start('MainMenu');
+        }
+    }
+   
+BasicGame.MainMenu = function (game) {  
+  this.music = null; 
+  this.playButton = null;  
+};  
+
+BasicGame.MainMenu.prototype = {  
+  create: function () {  
+    //  我们已经把所有资源都加载进来了，所以，现在可以进入主菜单     //  在这里，我们将播放一段音乐，添加一张图片和一个按钮  
+    this.add.sprite(0, 0, 'sky');  
+    this.loadingText = this.add.text(this.game.width / 2, this.game.height / 2 + 80, "Press Z or tap/click game to start", { align:'left',boundsAlignH:'center',boundsAlignV:'middle',font: "20px monospace", fill: "#fff" });     
+    this.loadingText.anchor.setTo(0.5, 0.5); 
+    },
+    /*this.add.text(this.game.width / 2, this.game.height - 90, "image assets Copyright (c) 2002 Ari Feldman", { font: "12px monospace", fill: "#fff", align: "center"}).anchor.setTo(0.5, 0.5); 
+    this.add.text(this.game.width / 2, this.game.height - 75, "sound assets Copyright (c) 2012 - 2013 Devin Watson", { font: "12px monospace", fill: "#fff", align: "center"}).anchor.setTo(0.5, 0.5);    },  */
+  update: function () {  
+    if (this.input.keyboard.isDown(Phaser.Keyboard.Z) || this.input.activePointer.isDown) {       
+        this.startGame(); 
+    }
+  },
+
+
+
+startGame: function (pointer) { 
+    this.state.start('Game'); 
+}
+};
+
+BasicGame.Game = function(game) { 
+ 
+};
 
 function generateMap(){
     for(var i=0;i<20;i++){
@@ -60,20 +113,69 @@ function gameOver(name){
     text.text = 'GameOver'+'\n'+name+' '+'wins';
 }
 
-function create() {
-    music = game.add.audio('boden');
+
+function quitGame(pointer) { 
+this.player.destroy(); 
+this.stars.destroy(); 
+this.leaf.destroy(); 
+this.bombs.destroy(); 
+this.map.destroy(); 
+this.platforms.destroy();
+this.scoreText.destroy();
+this.music.stop();
+this.score = 0;
+this.time = 0;
+this.judge = true;
+
+ 
+game.state.start('MainMenu');  
+ 
+ 
+}  
+
+
+BasicGame.Game.prototype = { 
+/*function preload() {
+    game.load.image('sky', 'assets/sky.png');
+    game.load.image('ground', 'assets/platform.png');
+    game.load.image('star', 'assets/star.png');
+    game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
+    game.load.spritesheet('leaf','assets/autumn_leaves_PNG3576.png');
+    game.load.image('bomb','assets/bomb.png');
+    game.load.image('tile','assets/tile.png');
+    game.load.audio('boden','assets/battleThemeA.mp3');
+    game.load.bitmapFont('desyrel', 'assets/desyrel.png', 'assets/desyrel.xml');
+}*/
+
+ /*var platforms;
+ var player;
+ var cursors;
+ var stars;
+ var score = 0;
+ var scoreText;
+ var leaf;
+ var ledge1;
+ var ledge2;
+ var bombs;
+ var map;
+ var layer;
+ var time = 0;
+ var music;
+ var judge = true;
+ var text;
+*/
+
+create:function() {
 
     music.play();
-
-    text = game.add.bitmapText(400, 300, 'desyrel','', 64);
-    text.anchor.x = 0.5;
-    text.anchor.y = 0.5;
 
     //  We're going to be using physics, so enable the Arcade Physics system
     game.physics.startSystem(Phaser.Physics.ARCADE);
 
     //  A simple background for our game
     game.add.sprite(0, 0, 'sky');
+
+
 
     //  The platforms group contains the ground and the 2 ledges we can jump on
     platforms = game.add.group();
@@ -174,11 +276,15 @@ function create() {
     }
    
    
-}
+    text = game.add.bitmapText(400, 300, 'desyrel','', 64);
+    text.anchor.x = 0.5;
+    text.anchor.y = 0.5;
+   
+},
 
 
 
-function update() {
+update:function() {
    
  //  Collide the player and the stars with the platforms
     var hitPlatform = game.physics.arcade.collide(player, platforms);
@@ -274,14 +380,23 @@ function update() {
     if(score >= 120){
     
     gameOver('Guy');
+    if(this.input.activePointer.isDown){
+    quitGame();
+    }
     }
     else if(judge === false){
     gameOver('Leaf');
+    
+    if(this.input.activePointer.isDown){
+    quitGame();
     }
+    }
+
+},
 
 }
 
-    };
+    
 
     </script>
 
