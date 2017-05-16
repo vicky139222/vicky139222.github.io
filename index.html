@@ -57,7 +57,9 @@ var platforms;
     this.load.image('bomb','assets/bomb.png');
     this.load.image('tile','assets/tile.png');
     this.load.audio('boden','assets/battleThemeA.mp3');
-    this.load.bitmapFont('desyrel', 'assets/desyrel.png', 'assets/desyrel.xml');},
+    this.load.bitmapFont('desyrel', 'assets/desyrel.png', 'assets/desyrel.xml');
+    this.load.image('cloud', 'assets/cloud.png');},
+
         create: function() {
             music = game.add.audio('boden');
             this.state.start('MainMenu');
@@ -73,8 +75,17 @@ BasicGame.MainMenu.prototype = {
   create: function () {  
     //  我们已经把所有资源都加载进来了，所以，现在可以进入主菜单     //  在这里，我们将播放一段音乐，添加一张图片和一个按钮  
     this.add.sprite(0, 0, 'sky');  
-    this.loadingText = this.add.text(this.game.width / 2, this.game.height / 2 + 80, "Press Z or tap/click game to start", { align:'left',boundsAlignH:'center',boundsAlignV:'middle',font: "20px monospace", fill: "#fff" });     
+    this.add.sprite(305,90,'dude');
+    var leaf = this.add.sprite(370,200,'leaf');
+    leaf.anchor.set(0.5);
+    leaf.scale.set(0.02);
+    this.loadingText = this.add.bitmapText(this.game.width / 2, this.game.height / 2 + 140, 'desyrel', 64);   
+    this.loadingText.text = "Press Z or tap/click game to start!";  
+    //text = game.add.bitmapText(400, 300, 'desyrel','', 64);
     this.loadingText.anchor.setTo(0.5, 0.5); 
+    this.rule = this.add.bitmapText(100,100,'desyrel',64);
+    this.rule.text = 'player1 : control      using arrow key to eat the \n           stars and dodge attacks by bombs'+ '\n'+'player2: control the      by mouse to sweep the \n           stars away from player1 as well as sweep\n           the bombs towards player1 to kill it'+'\n'+'Player1 wins when it eats all the stars and \nplayer2 wins when player1 dies';
+    this.rule.x -= 30;
     },
     /*this.add.text(this.game.width / 2, this.game.height - 90, "image assets Copyright (c) 2002 Ari Feldman", { font: "12px monospace", fill: "#fff", align: "center"}).anchor.setTo(0.5, 0.5); 
     this.add.text(this.game.width / 2, this.game.height - 75, "sound assets Copyright (c) 2012 - 2013 Devin Watson", { font: "12px monospace", fill: "#fff", align: "center"}).anchor.setTo(0.5, 0.5);    },  */
@@ -96,21 +107,21 @@ BasicGame.Game = function(game) { 
 };
 
 function generateMap(){
-    for(var i=0;i<20;i++){
+    for(var i=0;i<25;i++){
         for(var j = 0;j<15;j++){
             map.removeTile(i,j,layer);
         }
     }
     
     for(var i = 0;i<=25;i++){
-    map.putTile(0, Math.floor(Math.random()*20), Math.floor(Math.random()*13+2), layer);
+    map.putTile(0, Math.floor(Math.random()*25), Math.floor(Math.random()*13+2), layer);
     }
 
     map.setCollisionByExclusion([],true,layer);
 }
 
 function gameOver(name){
-    text.text = 'GameOver'+'\n'+name+' '+'wins';
+    text.text = 'GameOver'+'\n'+name+' '+'wins'+'\n'+'Click to restart';
 }
 
 
@@ -135,35 +146,7 @@ game.state.start('MainMenu'); 
 
 
 BasicGame.Game.prototype = { 
-/*function preload() {
-    game.load.image('sky', 'assets/sky.png');
-    game.load.image('ground', 'assets/platform.png');
-    game.load.image('star', 'assets/star.png');
-    game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
-    game.load.spritesheet('leaf','assets/autumn_leaves_PNG3576.png');
-    game.load.image('bomb','assets/bomb.png');
-    game.load.image('tile','assets/tile.png');
-    game.load.audio('boden','assets/battleThemeA.mp3');
-    game.load.bitmapFont('desyrel', 'assets/desyrel.png', 'assets/desyrel.xml');
-}*/
 
- /*var platforms;
- var player;
- var cursors;
- var stars;
- var score = 0;
- var scoreText;
- var leaf;
- var ledge1;
- var ledge2;
- var bombs;
- var map;
- var layer;
- var time = 0;
- var music;
- var judge = true;
- var text;
-*/
 
 create:function() {
 
@@ -173,7 +156,9 @@ create:function() {
     game.physics.startSystem(Phaser.Physics.ARCADE);
 
     //  A simple background for our game
-    game.add.sprite(0, 0, 'sky');
+    var cloud = game.add.sprite(0, 0, 'cloud');
+    cloud.width = game.world.width;
+    cloud.height = game.world.height;
 
 
 
@@ -188,7 +173,7 @@ create:function() {
 
     //  Scale it to fit the width of the game (the original sprite is 400x32 in size)
     ground.scale.setTo(2, 2);
-    ground.tint = 0x006799;
+    ground.tint = 0xff9999;
     //  This stops it from falling away when you jump on it
     ground.body.immovable = true;
 
@@ -275,7 +260,7 @@ create:function() {
         bomb.scale.set(0.1);
     }
    
-   
+
     text = game.add.bitmapText(400, 300, 'desyrel','', 64);
     text.anchor.x = 0.5;
     text.anchor.y = 0.5;
@@ -295,9 +280,9 @@ update:function() {
 
     time = time + game.time.physicsElapsed;
 
-    if(time >= 10){
+    if(time >= 8){
         generateMap();
-        time= time-10;
+        time= time-8;
     }
 
     
