@@ -73,7 +73,7 @@ BasicGame.MainMenu = function (game) {
 
 BasicGame.MainMenu.prototype = {  
   create: function () {  
-    //  我们已经把所有资源都加载进来了，所以，现在可以进入主菜单     //  在这里，我们将播放一段音乐，添加一张图片和一个按钮  
+    
     this.add.sprite(0, 0, 'sky');  
     this.add.sprite(305,90,'dude');
     var leaf = this.add.sprite(370,200,'leaf');
@@ -329,12 +329,12 @@ update:function() {
     scoreText.text = 'Score: ' + score;
 
     }
-    // 如果鼠标距离和精灵距离大于8
+    // if the distance between mouse and sprite is greater than 8 
     if (game.physics.arcade.distanceToPointer(leaf, game.input.activePointer) > 8) {
-        // 让精灵以300的速度靠近鼠标(或者Touch)
+        // sprite is approaching the mouse with the velocity of 300
         game.physics.arcade.moveToPointer(leaf, 300);
     } else {
-        // 精灵速度设为0
+        // set the velocity of the sprite to 0
         leaf.body.velocity.set(0);
     }
     game.physics.arcade.collide(leaf, platforms);
