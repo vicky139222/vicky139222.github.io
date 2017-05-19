@@ -1,0 +1,389 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>hello phaser!</title>
+        <script src="../phaser.min.js"></script>
+    </head>
+    <body>
+
+    <script type="text/javascript">
+
+    window.onload = function() {
+
+    game = new Phaser.Game(800, 600, Phaser.AUTO, '');
+    
+    game.state.add('Preloader', BasicGame.Preloader);
+    game.state.add('MainMenu', BasicGame.MainMenu); 
+    game.state.add('Game', BasicGame.Game); 
+    game.state.start('Preloader'); 
+}
+
+var BasicGame = { 
+};
+
+var game;
+var platforms;
+ var player;
+ var cursors;
+ var stars;
+ var score = 0;
+ var scoreText;
+ var leaf;
+ var ledge1;
+ var ledge2;
+ var bombs;
+ var map;
+ var layer;
+ var time = 0;
+ var music;
+ var judge = true;
+ var text;
+
+    BasicGame.Preloader = function(game) { 
+ 
+    this.background = null;  
+
+    this.preloadBar = null; 
+    }; 
+
+    BasicGame.Preloader.prototype = { 
+        preload: function() {
+        this.load.image('sky', 'assets/sky.png');
+    this.load.image('ground', 'assets/platform.png');
+    this.load.image('star', 'assets/star.png');
+    this.load.spritesheet('dude', 'assets/dude.png', 32, 48);
+    this.load.spritesheet('leaf','assets/autumn_leaves_PNG3576.png');
+    this.load.image('bomb','assets/bomb.png');
+    this.load.image('tile','assets/tile.png');
+    this.load.audio('boden','assets/battleThemeA.mp3');
+    this.load.bitmapFont('desyrel', 'assets/desyrel.png', 'assets/desyrel.xml');
+    this.load.image('cloud', 'assets/cloud.png');},
+
+        create: function() {
+            music = game.add.audio('boden');
+            this.state.start('MainMenu');
+        }
+    }
+   
+BasicGame.MainMenu = function (game) {  
+  this.music = null; 
+  this.playButton = null;  
+};  
+
+BasicGame.MainMenu.prototype = {  
+  create: function () {  
+    
+    this.add.sprite(0, 0, 'sky');  
+    this.add.sprite(305,90,'dude');
+    var leaf = this.add.sprite(370,200,'leaf');
+    leaf.anchor.set(0.5);
+    leaf.scale.set(0.02);
+    this.loadingText = this.add.bitmapText(this.game.width / 2, this.game.height / 2 + 140, 'desyrel', 64);   
+    this.loadingText.text = "Press Z or tap/click game to start!";  
+    //text = game.add.bitmapText(400, 300, 'desyrel','', 64);
+    this.loadingText.anchor.setTo(0.5, 0.5); 
+    this.rule = this.add.bitmapText(100,100,'desyrel',64);
+    this.rule.text = 'player1 : control      using arrow key to eat the \n           stars and dodge attacks by bombs'+ '\n'+'player2: control the      by mouse to sweep the \n           stars away from player1 as well as sweep\n           the bombs towards player1 to kill it'+'\n'+'Player1 wins when it eats all the stars and \nplayer2 wins when player1 dies';
+    this.rule.x -= 30;
+    },
+    /*this.add.text(this.game.width / 2, this.game.height - 90, "image assets Copyright (c) 2002 Ari Feldman", { font: "12px monospace", fill: "#fff", align: "center"}).anchor.setTo(0.5, 0.5); 
+    this.add.text(this.game.width / 2, this.game.height - 75, "sound assets Copyright (c) 2012 - 2013 Devin Watson", { font: "12px monospace", fill: "#fff", align: "center"}).anchor.setTo(0.5, 0.5);    },  */
+  update: function () {  
+    if (this.input.keyboard.isDown(Phaser.Keyboard.Z) || this.input.activePointer.isDown) {       
+        this.startGame(); 
+    }
+  },
+
+
+
+startGame: function (pointer) { 
+    this.state.start('Game'); 
+}
+};
+
+BasicGame.Game = function(game) { 
+ 
+};
+
+function generateMap(){
+    for(var i=0;i<25;i++){
+        for(var j = 0;j<15;j++){
+            map.removeTile(i,j,layer);
+        }
+    }
+    
+    for(var i = 0;i<=25;i++){
+    map.putTile(0, Math.floor(Math.random()*25), Math.floor(Math.random()*13+2), layer);
+    }
+
+    map.setCollisionByExclusion([],true,layer);
+}
+
+function gameOver(name){
+    text.text = 'GameOver'+'\n'+name+' '+'wins'+'\n'+'Click to restart';
+}
+
+
+function quitGame(pointer) { 
+this.player.destroy(); 
+this.stars.destroy(); 
+this.leaf.destroy(); 
+this.bombs.destroy(); 
+this.map.destroy(); 
+this.platforms.destroy();
+this.scoreText.destroy();
+this.music.stop();
+this.score = 0;
+this.time = 0;
+this.judge = true;
+
+ 
+game.state.start('MainMenu');  
+ 
+ 
+}  
+
+
+BasicGame.Game.prototype = { 
+
+
+create:function() {
+
+    music.play();
+
+    //  We're going to be using physics, so enable the Arcade Physics system
+    game.physics.startSystem(Phaser.Physics.ARCADE);
+
+    //  A simple background for our game
+    var cloud = game.add.sprite(0, 0, 'cloud');
+    cloud.width = game.world.width;
+    cloud.height = game.world.height;
+
+
+
+    //  The platforms group contains the ground and the 2 ledges we can jump on
+    platforms = game.add.group();
+
+    //  We will enable physics for any object that is created in this group
+    platforms.enableBody = true;
+
+    // Here we create the ground.
+    var ground = platforms.create(0, game.world.height-64, 'ground');
+
+    //  Scale it to fit the width of the game (the original sprite is 400x32 in size)
+    ground.scale.setTo(2, 2);
+    ground.tint = 0xff9999;
+    //  This stops it from falling away when you jump on it
+    ground.body.immovable = true;
+
+    map = game.add.tilemap();
+    map.addTilesetImage('tile');
+    layer = map.create('level1', 40, 30, 32, 32);
+
+    generateMap();
+    //  Now let's create two ledges
+   /* ledge1 = platforms.create(400, 400, 'ground');
+
+    ledge1.body.immovable = true;
+    ledge1.body.velocity.x = 30;
+    ledge1.tint = 0x0000ff;
+
+    ledge2 = platforms.create(-150, 200, 'ground');
+
+    ledge2.body.immovable = true;
+    ledge2.body.velocity.x = -30;
+    ledge2.tint = 0x54eeff;*/
+
+     // The player and its settings
+    player = game.add.sprite(32, game.world.height - 150, 'dude');
+
+    //  We need to enable physics on the player
+    game.physics.arcade.enable(player);
+
+    //  Player physics properties. Give the little guy a slight bounce.
+    player.body.bounce.y = 0.2;
+    player.body.gravity.y = 500;
+    player.body.collideWorldBounds = true;
+
+    //  Our two animations, walking left and right.
+    player.animations.add('left', [0, 1, 2, 3], 10, true);
+    player.animations.add('right', [5, 6, 7, 8], 10, true);
+
+    stars = game.add.group();
+
+    stars.enableBody = true;
+
+    //  Here we'll create 12 of them evenly spaced apart
+    for (var i = 0; i < 12; i++)
+    {
+        //  Create a star inside of the 'stars' group
+        var star = stars.create(i * 70, 0, 'star');
+
+        //  Let gravity do its thing
+        star.body.gravity.y = 20;
+
+        star.body.bounce.x = 0.5+ Math.random()*0.5;
+        star.body.collideWorldBounds = true;
+
+        //  This just gives each star a slightly random bounce value
+        star.body.bounce.y = 0.7 + Math.random() * 0.2;
+    }
+   
+    scoreText = game.add.text(16, 16, 'score: 0',{align:'left',boundsAlignH:'center',boundsAlignV:'middle',fontSize: '32px', fill: '#000' });
+
+    leaf = game.add.sprite(game.world.centerX, game.world.centerY, 'leaf');
+    leaf.anchor.set(0.5);
+    leaf.scale.set(0.05);
+
+    // enable leaf to physics
+    game.physics.arcade.enable(leaf);
+
+    bombs = game.add.group();
+
+    bombs.enableBody = true;
+
+    //  Here we'll create 2 of them evenly spaced apart
+    for (var i = 0; i < 2; i++)
+    {
+        //  Create a bomb inside of the 'stars' group
+        var bomb = bombs.create(200+Math.random()*400, 0, 'bomb');
+
+        //  Let gravity do its thing
+        bomb.body.gravity.y = 20;
+
+        bomb.body.bounce.x = 0.5+ Math.random()*0.5;
+        bomb.body.collideWorldBounds = true;
+
+        //  This just gives each star a slightly random bounce value
+        bomb.body.bounce.y = 0.7 + Math.random() * 0.2;
+        bomb.scale.set(0.1);
+    }
+   
+
+    text = game.add.bitmapText(400, 300, 'desyrel','', 64);
+    text.anchor.x = 0.5;
+    text.anchor.y = 0.5;
+   
+},
+
+
+
+update:function() {
+   
+ //  Collide the player and the stars with the platforms
+    var hitPlatform = game.physics.arcade.collide(player, platforms);
+//  Reset the players velocity (movement)
+    cursors = game.input.keyboard.createCursorKeys();
+
+    var hitTile = game.physics.arcade.collide(player, layer);
+
+    time = time + game.time.physicsElapsed;
+
+    if(time >= 8){
+        generateMap();
+        time= time-8;
+    }
+
+    
+    player.body.velocity.x = 0;
+
+    if (cursors.left.isDown)
+    {
+        //  Move to the left
+        player.body.velocity.x = -200;
+
+        player.animations.play('left');
+    }
+    else if (cursors.right.isDown)
+    {
+        //  Move to the right
+        player.body.velocity.x = 200;
+
+        player.animations.play('right');
+    }
+    else
+    {
+        //  Stand still
+        player.animations.stop();
+
+        player.frame = 4;
+    }
+
+    //  Allow the player to jump if they are touching the ground.
+    if (cursors.up.isDown  && (hitPlatform||hitTile))
+    {
+        player.body.velocity.y = -400;
+    }
+    
+    game.physics.arcade.collide(stars, platforms);
+    game.physics.arcade.overlap(player, stars, collectStar, null, this);
+    
+    function collectStar (player, star) {
+
+    // Removes the star from the screen
+    star.kill();
+
+    //  Add and update the score
+    score += 10;
+    scoreText.text = 'Score: ' + score;
+
+    }
+    // if the distance between mouse and sprite is greater than 8 
+    if (game.physics.arcade.distanceToPointer(leaf, game.input.activePointer) > 8) {
+        // sprite is approaching the mouse with the velocity of 300
+        game.physics.arcade.moveToPointer(leaf, 300);
+    } else {
+        // set the velocity of the sprite to 0
+        leaf.body.velocity.set(0);
+    }
+    game.physics.arcade.collide(leaf, platforms);
+    game.physics.arcade.collide(leaf, stars);
+    game.physics.arcade.collide(stars, layer);
+    game.physics.arcade.collide(bombs, layer);
+
+    /*if(ledge1.body.position.x >= game.world.width){
+        ledge1.body.position.x = -ledge1.width;
+    }
+
+    if(ledge2.body.position.x <= -ledge2.width){
+        ledge2.body.position.x = game.world.width;
+    }*/
+
+    game.physics.arcade.overlap(player, bombs, killPlayer, null, this);
+    
+    function killPlayer (player, bombs) {
+
+    // Removes the star from the screen
+    player.kill();
+    judge = false;
+
+    }
+    game.physics.arcade.collide(bombs, platforms);
+    game.physics.arcade.collide(bombs, leaf);
+
+    if(score >= 120){
+    
+    gameOver('Guy');
+    if(this.input.activePointer.isDown){
+    quitGame();
+    }
+    }
+    else if(judge === false){
+    gameOver('Leaf');
+    
+    if(this.input.activePointer.isDown){
+    quitGame();
+    }
+    }
+
+},
+
+}
+
+    
+
+    </script>
+
+    </body>
+</html>

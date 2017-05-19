@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>hello phaser!</title>
+        <script src="../phaser.min.js"></script>
+    </head>
+    <body>
+
+    <script type="text/javascript">
+
+    window.onload = function() {
+
+var game = new Phaser.Game(800, 600, Phaser.AUTO, 'phaser-example');
+
+var PhaserGame = function () {
+
+    this.sprite;
+
+    this.pad;
+
+    this.stick;
+
+   
+
+};
+
+PhaserGame.prototype = {
+
+    init: function () {
+
+        this.game.renderer.renderSession.roundPixels = true;
+        this.physics.startSystem(Phaser.Physics.ARCADE);
+
+    },
+
+    preload: function () {
+
+        this.load.atlas('arcade', 'assets/arcade-joystick.png', 'assets/arcade-joystick.json');
+        this.load.image('ball', 'assets/beball1.png');
+        this.load.image('bg', 'assets/space1.png');
+
+    },
+
+    create: function () {
+
+        this.add.image(0, 0, 'bg');
+
+        this.sprite = this.add.sprite(400, 200, 'ball');
+        this.physics.arcade.enable(this.sprite);
+
+        this.pad = this.game.plugins.add(Phaser.VirtualJoystick);
+
+        this.stick = this.pad.addStick(0, 0, 200, 'arcade');
+        this.stick.alignBottomLeft();
+
+        
+    },
+
+   
+
+    update: function () {
+
+        var maxSpeed = 400;
+
+        if (this.stick.isDown)
+        {
+            this.physics.arcade.velocityFromRotation(this.stick.rotation, this.stick.force * maxSpeed, this.sprite.body.velocity);
+        }
+        else
+        {
+            this.sprite.body.velocity.set(0);
+        }
+
+    }
+
+};
+
+game.state.add('Game', PhaserGame, true);
+
+}
+
+    
+
+    </script>
+
+    </body>
+</html>
