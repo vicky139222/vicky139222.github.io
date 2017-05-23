@@ -18,7 +18,7 @@ var layer;
 var position = [];
 var time = 0;
 var front_x =7;
-var front_y =7;
+var front_y =12;
 var cursors;
  var up=0 , down = 1, left=0,right=0;  
  var grid_width = 54;
@@ -59,9 +59,19 @@ function create() {
     position.push({x: 7, y: 5});
     position.push({x: 7, y: 6});
     position.push({x: 7, y: 7});
+    position.push({x: 7, y: 8});
+    position.push({x: 7, y: 9});
+    position.push({x: 7, y: 10});
+    position.push({x: 7, y: 11});
+    position.push({x: 7, y: 12});
     map.putTile(0,position[0].x,position[0].y,layer);
     map.putTile(0,position[1].x,position[1].y,layer);
     map.putTile(0,position[2].x,position[2].y,layer);
+    map.putTile(0,position[3].x,position[3].y,layer);
+    map.putTile(0,position[4].x,position[4].y,layer);
+    map.putTile(0,position[5].x,position[5].y,layer);
+    map.putTile(0,position[6].x,position[6].y,layer);
+    map.putTile(0,position[7].x,position[7].y,layer);
     cursors = game.input.keyboard.createCursorKeys();
     ball = game.add.sprite(200,200,'ball');
     ball.scale.set(0.025);
@@ -169,7 +179,7 @@ function update() {
 
 
 function snakeMove(){
-    
+
     time = time + game.time.physicsElapsed;
     if(time>=0.05){
 
@@ -230,7 +240,7 @@ function snakeMove(){
 }
 
 function gameOver(){
-    text.text = 'GameOver'+'\n'+'Click to restart';
+    text.text = 'GameOver'+'\n'+'Press F4 to restart';
 }
 
 }
