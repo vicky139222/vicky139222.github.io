@@ -1,0 +1,202 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>hello phaser!</title>
+        <script src="../phaser.min.js"></script>
+        <script src="../Box2D_v2.3.1_min.js"></script>
+        <!-- <script src="../box2d_util.min.js"></script> -->
+    </head>
+    <body>
+
+    <script type="text/javascript">
+
+    window.onload = function() {
+
+
+Box2D().then(function(Box2D) {
+    
+    var gravity = new Box2D.b2Vec2(0.0, 10);
+    var world = new Box2D.b2World(gravity);
+    var ground ;
+    var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+    var cursors;
+    var moving = 0;
+    var background;
+    var box;
+    var boxes;
+    var shape = new Box2D.b2PolygonShape(); 
+    var tell = 0;
+    var height = 30;
+    var width = 40;
+    var x;
+    var vX = 0;
+    var vY = 0;
+
+    function meterToPixel(meter){
+        return meter*100;
+    }
+
+    function radianToDegree(radian){
+        return radian/Math.PI*180;
+    }
+    
+    function tellPointerCondition(){
+        if(game.input.activePointer.isDown && tell === 0) {
+            tell = 1;
+            return true;
+        }
+        else if(!game.input.activePointer.isDown){
+            tell = 0;
+            return false;
+        }
+        else if (game.input.activePointer.isDown && tell === 1){
+            return false;
+        }
+    }
+
+
+
+    function preload() {
+      this.load.image('background', 'assets/background.png');
+      this.load.image('box', 'assets/box.png');
+      this.load.image('sand', 'assets/sand.png');
+    }
+
+    function enableBox2D(sprite,movable,position) {
+
+        var bd = new Box2D.b2BodyDef();
+        if(movable){
+            bd.set_type(Box2D.b2_dynamicBody);
+        }
+        bd.set_position(position);
+        var body = world.CreateBody(bd);
+        shape.SetAsBox(sprite.width/200, sprite.height/200);
+        body.CreateFixture(shape, 5.0);
+
+        sprite.box2DBody = body;
+
+        sprite.update = function(){
+            sprite.x = meterToPixel(sprite.box2DBody.GetPosition().get_x());
+            sprite.y = meterToPixel(sprite.box2DBody.GetPosition().get_y());
+            sprite.angle = radianToDegree(sprite.box2DBody.GetAngle());
+           // console.log(sprite.y);
+        }
+    
+        sprite.setVelocity = function(x,y){
+          var velocity = new Box2D.b2Vec2(x/100,y/100);
+            sprite.box2DBody.SetLinearVelocity(velocity);
+        }
+    }
+
+    function create() {
+        
+        world.SetAllowSleeping(false);
+       
+       
+        game.world.setBounds(0, 0, 1920, 600);
+        background = game.add.sprite(0, 0, 'background');
+
+        cursors = game.input.keyboard.createCursorKeys();
+        game.input.onDown.add(toggle, this);
+        background.height = game.world.height;
+        background.width = game.world.width;
+        boxes = game.add.group();
+        ground = this.add.sprite(game.world.width/2,game.world.height,'sand');
+        ground.anchor.set(0.5); 
+        ground.width = game.world.width;
+        ground.height = 100;
+        var groundPosition = new Box2D.b2Vec2(game.world.width/200, (game.world.height)/100);
+        enableBox2D(ground,false,groundPosition);
+
+
+    }
+    
+    function toggle() {
+
+        moving = (moving === 0) ? 1 : 0;
+
+    }  
+      
+    function clock() {
+        return Date.now();
+    }
+
+
+
+    
+function update() {
+    if (moving === 0)
+    {
+        if (cursors.up.isDown)
+        {
+            game.camera.y -= 4;
+        }
+        else if (cursors.down.isDown)
+        {
+            game.camera.y += 4;
+        }
+
+        if (cursors.left.isDown)
+        {
+            game.camera.x -= 4;
+        }
+        else if (cursors.right.isDown)
+        {
+            game.camera.x += 4;
+        }
+    }
+
+    world.Step(1.0/60.0, 3, 3);
+     if (game.input.keyboard.isDown(Phaser.KeyCode.A)){
+        height = 20;
+        width = 80;
+     }
+     if (game.input.keyboard.isDown(Phaser.KeyCode.S)){
+        height = 30;
+        width = 40;
+     }
+     if (game.input.keyboard.isDown(Phaser.KeyCode.D)){
+        height = 80;
+        width = 30;
+     }
+     if (game.input.keyboard.isDown(Phaser.KeyCode.W)){
+        height = 15;
+        width = 200;
+     }
+     if (game.input.keyboard.isDown(Phaser.KeyCode.Z)){
+        vX = 800;
+        vY = -800;
+     }
+     if (game.input.keyboard.isDown(Phaser.KeyCode.X)){
+        vX = 0;
+        vY = 0;
+     }
+   
+
+     if(tellPointerCondition()){
+        box = boxes.create(game.input.activePointer.worldX,game.input.activePointer.worldY,'box');
+        box.anchor.set(0.5);
+        box.height = height;
+        box.width = width;
+        x = new Box2D.b2Vec2(game.input.activePointer.worldX/100, game.input.activePointer.worldY/100);
+        enableBox2D(box,true,x);
+        box.setVelocity(vX,vY);
+
+     }
+
+
+}
+
+
+
+});
+
+}
+
+    
+
+    </script>
+
+    </body>
+</html>
