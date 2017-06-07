@@ -26,12 +26,29 @@ Box2D().then(function(Box2D) {
     var box;
     var boxes;
     var shape = new Box2D.b2PolygonShape(); 
-    var tell = 0;
+    //var tell = 0;
     var height = 30;
     var width = 40;
     var x;
     var vX = 0;
     var vY = 0;
+    var slingshot;
+    var slingshot2;
+    var tellCharacter = [0,0,0,0,0,0,0,0,0,0];
+    //var bulletReadyState = false;
+    var angle;
+    var tellRight = 1;
+    var vector;
+    var time=0;
+    var slingShotY= 1565;
+    var whoTurn = "player";
+    var start;
+    var state = "regular" ;
+    var lastFrameDown = false;
+    var timeCount;
+    var startScale=1;
+    var timeArray = [0,0,0,0,0,0,0,0,0];
+    //var initialCameraX = game.camera.x;
 
     function meterToPixel(meter){
         return meter*100;
@@ -42,15 +59,33 @@ Box2D().then(function(Box2D) {
     }
     
     function tellPointerCondition(){
-        if(game.input.activePointer.isDown && tell === 0) {
-            tell = 1;
+        return game.input.activePointer.isDown && !lastFrameDown;
+    }
+
+    function tellPointerRightCondition(){
+        if(!game.input.activePointer.isDown && tellRight === 0) {
+            tellRight = 1;
             return true;
         }
-        else if(!game.input.activePointer.isDown){
-            tell = 0;
+        else if(game.input.activePointer.isDown){
+            tellRight = 0;
             return false;
         }
-        else if (game.input.activePointer.isDown && tell === 1){
+        else if (!game.input.activePointer.isDown && tellRight === 1){
+            return false;
+        }
+    }
+
+    function tellCondition(character,number){
+        if(game.input.keyboard.isDown(character) && tellCharacter[number] === 0) {
+            tellCharacter[number] = 1;
+            return true;
+        }
+        else if(!game.input.keyboard.isDown(character)){
+            tellCharacter[number] = 0;
+            return false;
+        }
+        else if (game.input.keyboard.isDown(character) && tellCharacter[number] === 1){
             return false;
         }
     }
@@ -61,6 +96,7 @@ Box2D().then(function(Box2D) {
       this.load.image('background', 'assets/background.png');
       this.load.image('box', 'assets/box.png');
       this.load.image('sand', 'assets/sand.png');
+      this.load.image('slingshot', 'assets/slingshots.png');
     }
 
     function enableBox2D(sprite,movable,position) {
@@ -87,6 +123,11 @@ Box2D().then(function(Box2D) {
           var velocity = new Box2D.b2Vec2(x/100,y/100);
             sprite.box2DBody.SetLinearVelocity(velocity);
         }
+
+        sprite.setPosition = function(x,y){
+            var bulletPosition = new Box2D.b2Vec2(x/100, y/100); 
+            sprite.box2DBody.SetTransform(bulletPosition, sprite.box2DBody.GetAngle());
+        }
     }
 
     function create() {
@@ -94,21 +135,32 @@ Box2D().then(function(Box2D) {
         world.SetAllowSleeping(false);
        
        
-        game.world.setBounds(0, 0, 1920, 600);
+        game.world.setBounds(0, 0, 2500, 1700);
+        game.camera.y = 1500;
         background = game.add.sprite(0, 0, 'background');
 
         cursors = game.input.keyboard.createCursorKeys();
-        game.input.onDown.add(toggle, this);
+        //game.input.onDown.add(toggle, this);
         background.height = game.world.height;
         background.width = game.world.width;
-        boxes = game.add.group();
+        
         ground = this.add.sprite(game.world.width/2,game.world.height,'sand');
         ground.anchor.set(0.5); 
         ground.width = game.world.width;
         ground.height = 100;
         var groundPosition = new Box2D.b2Vec2(game.world.width/200, (game.world.height)/100);
         enableBox2D(ground,false,groundPosition);
-
+        slingshot = game.add.sprite(730,slingShotY,'slingshot');
+        slingshot.anchor.set(0.5);
+        slingshot.scale.set(0.9);
+        slingshot2 = game.add.sprite(1430,slingShotY,'slingshot');
+        slingshot2.anchor.set(0.5);
+        slingshot2.scale.set(-0.9,0.9);
+        boxes = game.add.group();
+        start = game.add.text(100, 1300, 'Player1\nStart to build your fortress!',{align:'left',boundsAlignH:'center',boundsAlignV:'middle',fontSize: '50px', fill: '#000' });
+        timeCount = game.add.text(20, 20, 'time: 20',{align:'left',boundsAlignH:'center',boundsAlignV:'middle',fontSize: '50px', fill: '#000' });
+        timeCount.fixedToCamera = true;
+       
 
     }
     
@@ -122,12 +174,17 @@ Box2D().then(function(Box2D) {
         return Date.now();
     }
 
-
-
+    function pointerWorldX(){
+        return game.input.activePointer.x/game.camera.scale.x+game.camera.x;
+    }
+    
+    function pointerWorldY(){
+        return game.input.activePointer.y/game.camera.scale.y+game.camera.y;
+    }
     
 function update() {
-    if (moving === 0)
-    {
+    //if (moving === 0)
+    /*{
         if (cursors.up.isDown)
         {
             game.camera.y -= 4;
@@ -145,7 +202,7 @@ function update() {
         {
             game.camera.x += 4;
         }
-    }
+    }*/
 
     world.Step(1.0/60.0, 3, 3);
      if (game.input.keyboard.isDown(Phaser.KeyCode.A)){
@@ -173,17 +230,199 @@ function update() {
         vY = 0;
      }
    
+     if(state === "regular"){
+         if(tellPointerCondition()){
+            box = boxes.create(pointerWorldX(),pointerWorldY(),'box');
+            box.anchor.set(0.5);
+            box.height = height;
+            box.width = width;
+            x = new Box2D.b2Vec2(pointerWorldX()/100, pointerWorldY()/100);
+            enableBox2D(box,true,x);
+            box.setVelocity(vX,vY);
 
-     if(tellPointerCondition()){
-        box = boxes.create(game.input.activePointer.worldX,game.input.activePointer.worldY,'box');
-        box.anchor.set(0.5);
-        box.height = height;
-        box.width = width;
-        x = new Box2D.b2Vec2(game.input.activePointer.worldX/100, game.input.activePointer.worldY/100);
-        enableBox2D(box,true,x);
-        box.setVelocity(vX,vY);
+         }
+    }
 
-     }
+    
+    time = time + game.time.physicsElapsed;
+    //timeCount.text = 'time:'+Math.floor(time);
+    if(time >= 2){
+        if ( Math.floor(20-timeArray[0])>0){
+            if(startScale>0){
+                start.scale.set(startScale);
+                startScale= startScale - 0.05;
+            }
+            else{
+                start.visible = false;
+                if(Math.floor(20-timeArray[0])>0){
+                    timeArray[0] +=  game.time.physicsElapsed;
+                    timeCount.text = 'time:'+ Math.floor(20-timeArray[0]);
+                }
+            }
+        }
+        else if (Math.floor(20-timeArray[1])>0){
+            
+            if(game.camera.x < 1330){
+                game.camera.x = game.camera.x + 4;
+                //start.visible = false;
+            }
+            else if(Math.floor(20-timeArray[1])>0){
+               // console.log(timeArray[1]);
+                timeArray[1] +=  game.time.physicsElapsed;
+                    timeCount.text = 'time:'+ Math.floor(20-timeArray[1]);
+            }
+        }
+        else {
+            
+            if(game.camera.scale.x > 0.35){
+                game.camera.scale.x -= 0.003;
+                game.camera.scale.y = game.camera.scale.x ;
+               // console.log("x:"+game.camera.x);
+            //console.log("y:"+game.camera.y);
+            //console.log("xscale:"+game.camera.scale.x);
+            //console.log("yscale:"+game.camera.scale.y);
+            }
+
+            if(game.camera.x > 0){
+                game.camera.x = game.camera.x - 5;
+                //console.log(game.camera.x );
+            }
+            else if(Math.floor(5-timeArray[2])>0){
+                // console.log(whoTurn);
+                 whoTurn = "player1";
+                 timeArray[2] +=  game.time.physicsElapsed;
+                 timeCount.text = 'time:'+ Math.floor(5-timeArray[2]);
+                 //console.log(Math.floor(5-timeArray[2]));
+            }
+            else if(Math.floor(5-timeArray[3])>0){
+                whoTurn = "player2";
+                 timeArray[3] +=  game.time.physicsElapsed;
+                 timeCount.text = 'time:'+ Math.floor(5-timeArray[3]);
+            }
+            else{
+                game.camera.scale.x = 1;
+                game.camera.scale.y = 1;
+                game.camera.x = 0;
+                game.camera.y = 1100;
+                timeArray[0] = 0;
+                timeArray[1] = 0;
+                timeArray[2] = 0; 
+                timeArray[3] = 0;
+                whoTurn = "player";
+                start.visible = true;
+                start.scale.set(1);
+
+            }
+
+        }
+    }
+    
+    /*if(time >= 48 && time<=60){
+        whoTurn = "player1";
+        //console.log("player1"+whoTurn);
+    }
+    else if(time>72 ){
+        whoTurn = "player2";
+        //console.log("player2");
+    }*/
+
+    if(whoTurn === "player1"){
+        if(tellCondition(Phaser.KeyCode.Q,0)){
+           
+                box = boxes.create(732,slingShotY-50,'box');
+                box.anchor.set(0.5);
+                box.height = height;
+                box.width = width;
+                x = new Box2D.b2Vec2(732/100, slingShotY-50/100);
+                enableBox2D(box,true,x);
+                box.setVelocity(vX,vY);
+                state = "bulletReady";
+                
+                
+            
+         }
+
+        if(state === "bulletReady"){
+            box.setPosition(732,slingShotY-50);
+            if(game.input.activePointer.isDown){
+                var dest = {x: pointerWorldX(), y:pointerWorldY()};
+
+                angle = Math.atan2(dest.y-slingShotY+50,dest.x-732);
+                if(Math.sqrt((dest.x-732)*(dest.x-732)+(dest.y-slingShotY+50)*(dest.y-slingShotY+50))>(200/2)){
+                    dest.x = 732 + (200/2) *Math.cos(angle);
+                    dest.y = slingShotY-50 + (200/2) *Math.sin(angle);
+                }
+
+                box.setPosition(dest.x ,dest.y);
+
+
+            }
+             if(tellPointerRightCondition()){
+               //x = new Box2D.b2Vec2(box.x/100, box.y/100);
+                state = "regular";
+                box.setVelocity(-(box.x-732)*20,-(box.y-slingShotY+50)*20);
+                //console.log("hi");
+            }
+            
+        }
+    }
+    else if(whoTurn ==="player2"){
+        if(tellCondition(Phaser.KeyCode.Q,0)){
+           
+                box = boxes.create(1410,slingShotY-50,'box');
+                box.anchor.set(0.5);
+                box.height = height;
+                box.width = width;
+                x = new Box2D.b2Vec2(1410/100, slingShotY-50/100);
+                enableBox2D(box,true,x);
+                box.setVelocity(vX,vY);
+                state = "bulletReady";
+         }
+
+        if(state === "bulletReady"){
+            box.setPosition(1410,slingShotY-50);
+            if(game.input.activePointer.isDown){
+                var dest = {x: pointerWorldX(), y:pointerWorldY()};
+
+                angle = Math.atan2(dest.y-slingShotY+50,dest.x-1410);
+                if(Math.sqrt((dest.x-1410)*(dest.x-1410)+(dest.y-slingShotY+50)*(dest.y-slingShotY+50))>(200/2)){
+                    dest.x = 1410 + (200/2) *Math.cos(angle);
+                    dest.y = slingShotY-50 + (200/2) *Math.sin(angle);
+                }
+
+                box.setPosition(dest.x ,dest.y);
+
+
+            }
+             if(tellPointerRightCondition()){
+               //x = new Box2D.b2Vec2(box.x/100, box.y/100);
+                state = "regular";
+                box.setVelocity(-(box.x-1410)*20,-(box.y-slingShotY+50)*20);
+                //console.log("hi");
+            }
+            
+        }
+
+    }
+    if(tellCondition(Phaser.KeyCode.C,1)){
+        state = "delete";
+    }
+
+    if(state ==="delete"){
+        if(tellPointerCondition()){
+            for(var i =0;i<boxes.children.length;++i){
+                if(boxes.children[i].box2DBody.GetFixtureList().TestPoint(new Box2D.b2Vec2(pointerWorldX()/100, pointerWorldY()/100))){
+                    world.DestroyBody(boxes.children[i].box2DBody);
+                    boxes.children[i].destroy();
+                }
+            }
+        }
+    }
+    if(tellCondition(Phaser.KeyCode.R,2)){
+        state = "regular";
+    }
+
+    lastFrameDown = game.input.activePointer.isDown;
 
 
 }

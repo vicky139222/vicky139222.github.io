@@ -93,6 +93,10 @@ function enable_box2d(sprite, x, y, width, height, dynamic, density, friction, b
 			return value;
 		},
 		
+		test_point: function (x, y) {
+			return box2d_body.body.GetFixtureList().TestPoint(new box2d_module.b2Vec2(to_meter(x), to_meter(y)));
+		}
+		
 		get_angle: function (value) {
 			return deg(box2d_body.body.GetAngle());
 		},
@@ -137,6 +141,8 @@ function enable_box2d(sprite, x, y, width, height, dynamic, density, friction, b
 	
 	sprite.box2d_body = box2d_body;
 	sprite.box2d_body.update();
+	
+	sprite.events.onDestroy.add(box2d_body.destroy, this);
 	
 	sprite.update = function () {
 		sprite.box2d_body.update();
