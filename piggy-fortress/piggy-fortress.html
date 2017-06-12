@@ -54,6 +54,7 @@ Box2D().then(function(Box2D) {
     var piggy;
     var piggyIsThere = false;
     var needToKill = [];
+    var invincible = false;
     //var initialCameraX = game.camera.x;
 
     function meterToPixel(meter){
@@ -166,10 +167,9 @@ Box2D().then(function(Box2D) {
             var velocityScalarA = Math.sqrt(fixtureA.GetBody().GetLinearVelocity().get_y()*fixtureA.GetBody().GetLinearVelocity().get_y()+fixtureA.GetBody().GetLinearVelocity().get_x()*fixtureA.GetBody().GetLinearVelocity().get_x());
             var power = (fixtureB.GetBody().GetMass())*0.5*velocityScalarB*velocityScalarB+(fixtureA.GetBody().GetMass())*0.5*velocityScalarA*velocityScalarA;
             //console.log(fixtureA.GetBody().name)
-            if(power >= 4){
+            if(power >= 4&&invincible){
                 if(fixtureA.GetBody().name === "piggy"){
-                     needToKill.push(fixtureA.GetBody().sprite);
-                   
+                    needToKill.push(fixtureA.GetBody().sprite);
                 }
                 if(fixtureB.GetBody().name === "piggy"){
                     needToKill.push(fixtureB.GetBody().sprite);
@@ -262,34 +262,41 @@ function update() {
         height = 20;
         width = 80;
         piggyIsThere = false;
+        state = "regular";
      }
      if (game.input.keyboard.isDown(Phaser.KeyCode.S)){
         height = 30;
         width = 40;
         piggyIsThere = false;
+        state = "regular";
      }
      if (game.input.keyboard.isDown(Phaser.KeyCode.D)){
         height = 80;
         width = 30;
         piggyIsThere = false;
+        state = "regular";
      }
      if (game.input.keyboard.isDown(Phaser.KeyCode.W)){
         height = 15;
         width = 200;
         piggyIsThere = false;
+        state = "regular";
      }
      if (game.input.keyboard.isDown(Phaser.KeyCode.Z)){
         vX = 800;
         vY = -800;
         piggyIsThere = false;
+        state = "regular";
      }
      if (game.input.keyboard.isDown(Phaser.KeyCode.X)){
         vX = 0;
         vY = 0;
         piggyIsThere = false;
+        state = "regular";
      }
      if (game.input.keyboard.isDown(Phaser.KeyCode.P)){
         piggyIsThere = true;
+        state = "regular";
      }
    
      if(state === "regular"){
@@ -365,11 +372,13 @@ function update() {
                  timeArray[2] +=  game.time.physicsElapsed;
                  timeCount.text = 'time:'+ Math.floor(10-timeArray[2]);
                  //console.log(Math.floor(5-timeArray[2]));
+                 invincible = true;
             }
             else if(Math.floor(10-timeArray[3])>0){
                 whoTurn = "player2";
                  timeArray[3] +=  game.time.physicsElapsed;
                  timeCount.text = 'time:'+ Math.floor(10-timeArray[3]);
+                 invincible = true;
             }
             else{
                 game.camera.scale.x = 1;
@@ -383,6 +392,7 @@ function update() {
                 whoTurn = "player";
                 start.visible = true;
                 start.scale.set(1);
+                invincible = false;
 
             }
 
@@ -410,7 +420,6 @@ function update() {
                 box.setVelocity(vX,vY);
                 state = "bulletReady";
                 piggyIsThere = false;
-                
             
          }
 
