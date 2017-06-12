@@ -387,6 +387,7 @@ function update() {
                 if(Math.floor(TIMEFORBUILDING-timeArray[0])>0){
                     timeArray[0] +=  game.time.physicsElapsed;
                     timeCount.text = 'time:'+ Math.floor(TIMEFORBUILDING-timeArray[0]);
+                    playerToDisplay = 0;
                 }
             }
         }
@@ -399,7 +400,8 @@ function update() {
             else if(Math.floor(TIMEFORBUILDING-timeArray[1])>0){
                // console.log(timeArray[1]);
                 timeArray[1] +=  game.time.physicsElapsed;
-                    timeCount.text = 'time:'+ Math.floor(TIMEFORBUILDING-timeArray[1]);
+                timeCount.text = 'time:'+ Math.floor(TIMEFORBUILDING-timeArray[1]);
+                playerToDisplay = 1;
             }
         }
         else {
@@ -424,12 +426,14 @@ function update() {
                  timeCount.text = 'time:'+ Math.floor(10-timeArray[2]);
                  //console.log(Math.floor(5-timeArray[2]));
                  invincible = true;
+                 
             }
             else if(Math.floor(10-timeArray[3])>0){
                 whoTurn = "player2";
                  timeArray[3] +=  game.time.physicsElapsed;
                  timeCount.text = 'time:'+ Math.floor(10-timeArray[3]);
                  invincible = true;
+                 
             }
             else{
                 game.camera.scale.x = 1;
