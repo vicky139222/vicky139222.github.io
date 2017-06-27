@@ -53,8 +53,8 @@ Box2D().then(function(Box2D) {
     var piggyIsThere = false;
     var needToKill = [];
     var invincible = false;
-    var TIMEFORBUILDING = 60;
-    var TIMEFORFIGHTING = 20;
+    var TIMEFORBUILDING = 2;
+    var TIMEFORFIGHTING = 10;
     var playerToDisplay = 0;
     var brickName = 1;
     var onTheSlingshot;
@@ -114,12 +114,75 @@ Box2D().then(function(Box2D) {
     var leftNum = [];
     var tellFly = true;
     var CENTER_BORDER = 1100;
-
+    var whoOnMyPointer;
+    var whoOnMySlingshot1;
+    var whoOnMySlingshot2;
+    var tintTime = 0;
+    var bloodOfBrick = 30;
+    var lastFrameA;
+    var lastFrameB;
+    var covers;
+    var cover;
+    var coverText = [];
+    var coverButton;
+    var coverOff= false;
    
+    function resetAll(){
+        
+        for(var i = boxes.children.length-1;i>=0;--i){
+            boxes.children[i].destroy();
+        }
+        
+        for(var i = 0; i<2;i++){
+            for(var j = 0; j<4;j++){
+                blocksLeft[i][j]= 20 ; 
+            }
+            blocksLeft[i][4] = 5;
+        }
+        reround();
 
+        for(var i = piggies.children.length-1;i>=0;--i){
+            piggies.children[i].destroy();
+        }
+        
+        for(var i=0;i<5;i++){
+            piggy = piggies.create(620,slingShotY+i*20,'piggy');
+            piggy.anchor.set(0.5);
+            piggy.scale.set(0.1);
+            x = new Box2D.b2Vec2(600/100, (slingShotY+i*20)/100);
+            enableBox2D(piggy,true,x,"circle");
+            piggy.movable = true;
+            piggy.owner = 0;
+        }
+        for(var i=0;i<5;i++){
+            piggy = piggies.create(1520,slingShotY+i*20,'piggy');
+            piggy.anchor.set(0.5);
+            piggy.scale.set(0.1);
+            x = new Box2D.b2Vec2(1520/100, (slingShotY+i*20)/100);
+            enableBox2D(piggy,true,x,"circle");
+            piggy.movable = true;
+            piggy.owner = 1;
+        }
+
+    }
 
     //var initialCameraX = game.camera.x;
-
+    function reround(){
+        game.camera.scale.x = 1;
+        game.camera.scale.y = 1;
+        game.camera.x = 0;
+        game.camera.y = 1100;
+        timeArray[0] = 0;
+        timeArray[1] = 0;
+        timeArray[2] = 0; 
+        timeArray[3] = 0;
+        whoTurn = "player";
+        start.visible = true;
+        start.scale.set(1);
+        invincible = false;
+        game.camera.y = 910;
+    }
+    
     function meterToPixel(meter){
         return meter*100;
     }
@@ -171,7 +234,29 @@ Box2D().then(function(Box2D) {
         }
     }
 
+    //function clamp(x, a, b){
+    //
+    //}
 
+    function rgbToColor(r, g, b) {
+        r = Math.round(r * 255);
+        g = Math.round(g * 255);
+        b = Math.round(b * 255);
+        var rgb = b | (g << 8) | (r << 16);
+        return rgb;
+    }
+
+    function actionOnClick(){
+        covers.visible = false;
+        //resetAll();
+        coverOff = true;
+    }
+
+    //function actionOnClick2(sprite,pointer){
+    //    covers.visible = false;
+        //resetAll();
+    //    coverOff = true;
+    //}
 
     function preload() {
       this.load.image('background', 'assets/background.png');
@@ -180,6 +265,8 @@ Box2D().then(function(Box2D) {
       this.load.image('slingshot', 'assets/slingshots.png');
       this.load.image('piggy', 'assets/piggy.png');
       this.load.image('black', 'assets/black.png');
+      this.load.image('coverPage', 'assets/desert.png');
+      this.load.image('button', 'assets/button.png');
     }
 
     function enableBox2D(sprite,movable,position,type) {
@@ -192,8 +279,16 @@ Box2D().then(function(Box2D) {
         var body = world.CreateBody(bd);
         if (type ==="box"){
             shape.SetAsBox(sprite.width/200, sprite.height/200);
-
+            var fixture_def = new Box2D.b2FixtureDef();
+            fixture_def.set_shape(shape);
+            fixture_def.set_density(10);
+            fixture_def.set_friction(2);
+            fixture_def.set_restitution(0.1);
+    
+        body.CreateFixture(fixture_def);
             body.CreateFixture(shape, 5.0);
+
+
             sprite.box2DBody = body;
         sprite.box2DBody.name = 'box';
         }
@@ -202,16 +297,31 @@ Box2D().then(function(Box2D) {
 
             body.CreateFixture(shapeCircle, 5.0);
             sprite.box2DBody = body;
-        sprite.box2DBody.name = 'piggy';
+            sprite.box2DBody.name = 'piggy';
         }
 
         sprite.box2DBody.sprite = sprite;
+        sprite.r = 1 ;
+        sprite.g = 1 ;
+        sprite.b = 1 ;
+        sprite.flashingSpeed = 0 ;
+        sprite.deep = 0;
+        
+
         
         sprite.update = function(){
+            tintTime = tintTime+ game.time.physicsElapsed;
             sprite.x = meterToPixel(sprite.box2DBody.GetPosition().get_x());
             sprite.y = meterToPixel(sprite.box2DBody.GetPosition().get_y());
             sprite.angle = radianToDegree(sprite.box2DBody.GetAngle());
            // console.log(sprite.y);
+           sprite.p = (Math.sin(sprite.flashingSpeed*tintTime)+1)/2*sprite.deep;
+           sprite.tint = rgbToColor(sprite.r*(1-sprite.p)+1*sprite.p,sprite.g*(1-sprite.p),sprite.b*(1-sprite.p));
+
+           if (sprite.y > 3000){
+                sprite.destroy();
+           }
+            
         }
     
         sprite.setVelocity = function(x,y){
@@ -233,32 +343,61 @@ Box2D().then(function(Box2D) {
 
         function destroyBody() {
             world.DestroyBody(sprite.box2DBody);
+            if (sprite.box2DBody.name === "piggy"){
+                blocksLeft[sprite.owner][4]--;
+               // console.log(blocksLeft[sprite.owner][4]);
+            }
         }
 
         sprite.events.onDestroy.add(destroyBody, this);
+        //call the function when the event happened
     }
 
     function create() {
         var listener = new Box2D.JSContactListener();
         listener.BeginContact = function (contactPtr) {
             var contact = Box2D.wrapPointer( contactPtr, Box2D.b2Contact );
+
             var fixtureA = contact.GetFixtureA();
             var fixtureB = contact.GetFixtureB();
+
+
             var velocityScalarB = Math.sqrt(fixtureB.GetBody().GetLinearVelocity().get_y()*fixtureB.GetBody().GetLinearVelocity().get_y()+fixtureB.GetBody().GetLinearVelocity().get_x()*fixtureB.GetBody().GetLinearVelocity().get_x());
             var velocityScalarA = Math.sqrt(fixtureA.GetBody().GetLinearVelocity().get_y()*fixtureA.GetBody().GetLinearVelocity().get_y()+fixtureA.GetBody().GetLinearVelocity().get_x()*fixtureA.GetBody().GetLinearVelocity().get_x());
             var power = (fixtureB.GetBody().GetMass())*0.5*velocityScalarB*velocityScalarB+(fixtureA.GetBody().GetMass())*0.5*velocityScalarA*velocityScalarA;
             //console.log(fixtureA.GetBody().name)
-            if(power >= 4&&invincible){
+            if(power >= 10&&invincible){
                 if(fixtureA.GetBody().name === "piggy"){
                     needToKill.push(fixtureA.GetBody().sprite);
                 }
                 if(fixtureB.GetBody().name === "piggy"){
+                    
                     needToKill.push(fixtureB.GetBody().sprite);
                 }
 
             }
             //fixtureA.GetBody().GetLinearVelocity().get_y()
+            if(power>=100&&!(fixtureA===lastFrameA&&fixtureB===lastFrameB)){
+               // console.log(fixtureA.GetBody().name, Math.random());
+                if(fixtureA.GetBody().name != "piggy"&&fixtureA.GetBody().name != "ground"){
+                    fixtureA.GetBody().sprite.flashingSpeed = fixtureA.GetBody().sprite.flashingSpeed+1;
+                    fixtureA.GetBody().sprite.deep = fixtureA.GetBody().sprite.deep+ 1/bloodOfBrick;
+                    if(fixtureA.GetBody().sprite.deep >= 1){
+                        needToKill.push(fixtureA.GetBody().sprite);
+                    }
+                }
 
+                if(fixtureB.GetBody().name != "piggy"&&fixtureB.GetBody().name != "ground"){
+                    fixtureB.GetBody().sprite.flashingSpeed = fixtureB.GetBody().sprite.flashingSpeed+0.05;
+                    fixtureB.GetBody().sprite.deep = fixtureB.GetBody().sprite.deep+ 0.5/bloodOfBrick;
+                    if(fixtureB.GetBody().sprite.deep >= 1){
+                        needToKill.push(fixtureB.GetBody().sprite);
+                    }
+                }
+            }
+
+            lastFrameA = fixtureA;
+            lastFrameB = fixtureB;
         }
 
         listener.EndContact = function() {};
@@ -270,7 +409,7 @@ Box2D().then(function(Box2D) {
         world.SetAllowSleeping(false);
        
        
-        game.world.setBounds(0, 0, 2500, 1700);
+        game.world.setBounds(0, 0, 2280, 1700);
         game.camera.y = 1500;
         background = game.add.sprite(0, 0, 'background');
 
@@ -285,6 +424,7 @@ Box2D().then(function(Box2D) {
         ground.height = 600;
         var groundPosition = new Box2D.b2Vec2(game.world.width/200, (game.world.height)/100);
         enableBox2D(ground,false,groundPosition,"box");
+        ground.box2DBody.name = "ground";
         slingshot = game.add.sprite(730,slingShotY,'slingshot');
         slingshot.anchor.set(0.5);
         slingshot.scale.set(0.9);
@@ -308,8 +448,8 @@ Box2D().then(function(Box2D) {
             icon.width = BLOCK_TYPES[i].width*0.5;
         }
         boxes = game.add.group();
-        start = game.add.text(100, 1300, 'Player1\nStart to build your fortress!',{align:'left',boundsAlignH:'center',boundsAlignV:'middle',fontSize: '50px', fill: '#000' });
-        timeCount = game.add.text(20, 20, 'time: 20',{align:'left',boundsAlignH:'center',boundsAlignV:'middle',fontSize: '50px', fill: '#000' });
+        start = game.add.text(100, 1100, 'Player1\nStart to build your fortress!',{align:'left',boundsAlignH:'center',boundsAlignV:'middle',fontSize: '50px', fill: '#000' });
+        timeCount = game.add.text(20, 20, 'time:  ',{align:'left',boundsAlignH:'center',boundsAlignV:'middle',fontSize: '50px', fill: '#000' });
         timeCount.fixedToCamera = true
         piggies = game.add.group();
         game.camera.y = 910;
@@ -320,6 +460,7 @@ Box2D().then(function(Box2D) {
             x = new Box2D.b2Vec2(600/100, (slingShotY+i*20)/100);
             enableBox2D(piggy,true,x,"circle");
             piggy.movable = true;
+            piggy.owner = 0;
         }
         for(var i=0;i<5;i++){
             piggy = piggies.create(1520,slingShotY+i*20,'piggy');
@@ -328,6 +469,7 @@ Box2D().then(function(Box2D) {
             x = new Box2D.b2Vec2(1520/100, (slingShotY+i*20)/100);
             enableBox2D(piggy,true,x,"circle");
             piggy.movable = true;
+            piggy.owner = 1;
         }
         leftNum[0] = game.add.text(blacks.children[0].x,blacks.children[0].y, '',{align:'left',boundsAlignH:'center',boundsAlignV:'middle',fontSize: '40px', fill: '#000' }, blacks);
         leftNum[1] = game.add.text(blacks.children[1].x,blacks.children[1].y, '',{align:'left',boundsAlignH:'center',boundsAlignV:'middle',fontSize: '40px', fill: '#000' }, blacks);
@@ -336,7 +478,21 @@ Box2D().then(function(Box2D) {
 
         leftNum[4] = game.add.text(blacks.children[4].x-20,blacks.children[4].y-20, 'Delete\nMode',{align:'left',boundsAlignH:'center',boundsAlignV:'middle',fontSize: '20px', fill: '#000' }, blacks);
         leftNum[5] = game.add.text(blacks.children[5].x-20,blacks.children[5].y-20, 'Drag\nMode',{align:'left',boundsAlignH:'center',boundsAlignV:'middle',fontSize: '20px', fill: '#000' }, blacks);
-     
+        
+        
+        covers = game.add.group();
+        cover = covers.create(-100,900,'coverPage');
+        cover.anchor.set(0);
+        cover.width = 1100;
+        cover.height = 630;
+        coverText[0] = game.add.text(150,1000, 'Defense of\n',{align:'left',boundsAlignH:'center',boundsAlignV:'middle',fontSize: '80px', fill: '#045' }, covers);
+        coverText[1] = game.add.text(200,1100, 'Piggy',{align:'left',boundsAlignH:'center',boundsAlignV:'middle',fontSize: '120px', fill: '#065' }, covers);
+        coverText[1].angle = 5;
+        coverButton = game.add.button(450, 1450, 'button', actionOnClick, this, 2, 1, 0);
+        coverButton.scale.set(-0.35,-0.35);
+        covers.add(coverButton);
+        //coverButton.anchor.set(-0.5);
+
     }
     
     function toggle() {
@@ -410,38 +566,40 @@ function update() {
             game.camera.x += 4;
         }
     }*/
+    //coverButton.inputEnabled = true;
+    //coverButton.events.onInputDown.add(actionOnClick2,this);
     
     if(!game.input.activePointer.isDown){
         world.Step(1.0/60.0, 3, 3);
     }
     
-    if (ifOnTheSprite(game.input.activePointer.x,game.input.activePointer.y, blacks.children[0])){
+    if (ifOnTheSprite(game.input.activePointer.x,game.input.activePointer.y, blacks.children[0])&&game.input.activePointer.isDown&&!lastFrameDown){
         height = BLOCK_TYPES[0].height;
         width = BLOCK_TYPES[0].width;
         piggyIsThere = false;
         state = "regular";
         brickName = BLOCK_TYPES[0].brickName;
      }
-     if (ifOnTheSprite(game.input.activePointer.x,game.input.activePointer.y, blacks.children[1])){
+     if (ifOnTheSprite(game.input.activePointer.x,game.input.activePointer.y, blacks.children[1])&&game.input.activePointer.isDown&&!lastFrameDown){
         height = BLOCK_TYPES[1].height;
         width = BLOCK_TYPES[1].width;
         piggyIsThere = false;
         state = "regular";
         brickName = BLOCK_TYPES[1].brickName;
      }
-     if (ifOnTheSprite(game.input.activePointer.x,game.input.activePointer.y, blacks.children[2])){
+     if (ifOnTheSprite(game.input.activePointer.x,game.input.activePointer.y, blacks.children[2])&&game.input.activePointer.isDown&&!lastFrameDown){
         height = BLOCK_TYPES[2].height;
         width = BLOCK_TYPES[2].width;
         piggyIsThere = false;
         state = "regular";
         brickName = BLOCK_TYPES[2].brickName;
      }
-     if (ifOnTheSprite(game.input.activePointer.x,game.input.activePointer.y, blacks.children[3])){
+     if (ifOnTheSprite(game.input.activePointer.x,game.input.activePointer.y, blacks.children[3])&&game.input.activePointer.isDown&&!lastFrameDown){
         height = BLOCK_TYPES[3].height;
         width = BLOCK_TYPES[3].width;
         piggyIsThere = false;
         state = "regular";
-        brickName =BLOCK_TYPES[3].brickName;
+        brickName = BLOCK_TYPES[3].brickName;
      }
      
    
@@ -458,6 +616,7 @@ function update() {
             box.name = brickName;
             box.movable = true;
             declineBrick(playerToDisplay,brickName);
+            whoOnMyPointer = box;
          }
 
         /* if(tellPointerCondition()&&piggyIsThere){
@@ -488,6 +647,8 @@ function update() {
                     follow.x = Math.max(follow.x, CENTER_BORDER);   
                 }
                 box.setPosition(follow.x,follow.y);
+                whoOnMyPointer = box;
+                //console.log(box.y);
             }
             else{
                 box.movable = false;
@@ -495,11 +656,13 @@ function update() {
             }
         if(!lastFrameDown&&game.input.activePointer.isDown){
             for(var i =0;i<boxes.children.length;++i){
-                if(boxes.children[i].box2DBody.GetFixtureList().TestPoint(new Box2D.b2Vec2(pointerWorldX()/100, pointerWorldY()/100))){
+                if(boxes.children[i].box2DBody.GetFixtureList().TestPoint(new Box2D.b2Vec2(pointerWorldX()/100, pointerWorldY()/100)))
+                {
                     //blocksLeft[playerToDisplay][boxes.children[i].name]++;
                     //boxes.children[i].destroy();
                     box = boxes.children[i];
                     box.movable = true;
+                    whoOnMyPointer = box;
                 }
             }
         }
@@ -538,6 +701,7 @@ function update() {
                     //boxes.children[i].destroy();
                     piggy = piggies.children[i];
                     piggy.movable = true;
+                    whoOnMyPointer = piggy;
                 }
             }
         }
@@ -555,7 +719,7 @@ function update() {
     
     time = time + game.time.physicsElapsed;
     //timeCount.text = 'time:'+Math.floor(time);
-    if(time >= 2){
+    if(time >= 2&&coverOff){
         if ( Math.floor(TIMEFORBUILDING-timeArray[0])>0){
             playerToDisplay = 0;
             if(startScale>0){
@@ -625,19 +789,7 @@ function update() {
                  
             }
             else{
-                game.camera.scale.x = 1;
-                game.camera.scale.y = 1;
-                game.camera.x = 0;
-                game.camera.y = 1100;
-                timeArray[0] = 0;
-                timeArray[1] = 0;
-                timeArray[2] = 0; 
-                timeArray[3] = 0;
-                whoTurn = "player";
-                start.visible = true;
-                start.scale.set(1);
-                invincible = false;
-                game.camera.y = 910;
+                reround();
 
             }
 
@@ -661,14 +813,14 @@ function update() {
                 //box.width = width;
                 //x = new Box2D.b2Vec2(732/100, slingShotY-50/100);
                 //enableBox2D(box,true,x,"box");
-                box.setPosition(732,slingShotY-50);
+                whoOnMyPointer.setPosition(732,slingShotY-50);
                 state = "bulletReady";
                 piggyIsThere = false;
             
          }
 
         if(state === "bulletReady"){
-            box.setPosition(732,slingShotY-50);
+            whoOnMyPointer.setPosition(732,slingShotY-50);
             if(game.input.activePointer.isDown){
                 var dest = {x: pointerWorldX(), y:pointerWorldY()};
 
@@ -678,14 +830,14 @@ function update() {
                     dest.y = slingShotY-50 + (200/2) *Math.sin(angle);
                 }
 
-              box.setPosition(dest.x ,dest.y);
+              whoOnMyPointer.setPosition(dest.x ,dest.y);
 
 
             }
              if(tellPointerRightCondition()){
                //x = new Box2D.b2Vec2(box.x/100, box.y/100);
                 state = "regular";
-                box.setVelocity(-(box.x-732)*20,-(box.y-slingShotY+50)*20);
+                whoOnMyPointer.setVelocity(-(whoOnMyPointer.x-732)*20,-(whoOnMyPointer.y-slingShotY+50)*20);
                 //console.log("hi");
             }
             
@@ -700,13 +852,13 @@ function update() {
                 //box.width = width;
                 //x = new Box2D.b2Vec2(1410/100, slingShotY-50/100);
                 //enableBox2D(box,true,x,"box");
-                box.setPosition(1410,slingShotY-50);
+                whoOnMyPointer.setPosition(1410,slingShotY-50);
                 state = "bulletReady";
                 piggyIsThere = false;
          }
 
         if(state === "bulletReady"){
-            box.setPosition(1410,slingShotY-50);
+            whoOnMyPointer.setPosition(1410,slingShotY-50);
             if(game.input.activePointer.isDown){
                 var dest = {x: pointerWorldX(), y:pointerWorldY()};
 
@@ -716,41 +868,48 @@ function update() {
                     dest.y = slingShotY-50 + (200/2) *Math.sin(angle);
                 }
 
-                box.setPosition(dest.x ,dest.y);
+                whoOnMyPointer.setPosition(dest.x ,dest.y);
 
 
             }
              if(tellPointerRightCondition()){
                //x = new Box2D.b2Vec2(box.x/100, box.y/100);
                 state = "regular";
-                box.setVelocity(-(box.x-1410)*20,-(box.y-slingShotY+50)*20);
+                whoOnMyPointer.setVelocity(-(whoOnMyPointer.x-1410)*20,-(whoOnMyPointer.y-slingShotY+50)*20);
                 //console.log("hi");
             }
             
         }
 
     }
-    if(ifOnTheSprite(game.input.activePointer.x,game.input.activePointer.y,blacks.children[4])){
+    if(ifOnTheSprite(game.input.activePointer.x,game.input.activePointer.y,blacks.children[4])&&game.input.activePointer.isDown&&!lastFrameDown){
         state = "delete";
     }
 
     if(state ==="delete"){
         if(tellPointerCondition()){
             for(var i =0;i<boxes.children.length;++i){
-                if(boxes.children[i].box2DBody.GetFixtureList().TestPoint(new Box2D.b2Vec2(pointerWorldX()/100, pointerWorldY()/100))){
+                if(boxes.children[i].box2DBody.GetFixtureList().TestPoint(new Box2D.b2Vec2(pointerWorldX()/100, pointerWorldY()/100))) {
                     blocksLeft[playerToDisplay][boxes.children[i].name]++;
                     boxes.children[i].destroy();
                 }
             }
         }
     }
-    if(ifOnTheSprite(game.input.activePointer.x,game.input.activePointer.y,blacks.children[5])){
+    if(ifOnTheSprite(game.input.activePointer.x,game.input.activePointer.y,blacks.children[5])&&game.input.activePointer.isDown&&!lastFrameDown){
         state = "regular";
     }
     
     for(var i = 0 ;i<needToKill.length;i++){
         needToKill[i].destroy();
     }
+
+    if(blocksLeft[0][4]===0 ||blocksLeft[1][4]===0){
+        covers.visible = true;
+        coverOff = false;
+        resetAll();
+    }
+    
     needToKill = [];
     
     lastFrameDown = game.input.activePointer.isDown;
