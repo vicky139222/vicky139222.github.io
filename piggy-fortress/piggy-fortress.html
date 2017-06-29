@@ -54,7 +54,7 @@ Box2D().then(function(Box2D) {
     var needToKill = [];
     var invincible = false;
     var TIMEFORBUILDING = 2;
-    var TIMEFORFIGHTING = 10;
+    var TIMEFORFIGHTING = 1000;
     var playerToDisplay = 0;
     var brickName = 1;
     var onTheSlingshot;
@@ -126,6 +126,18 @@ Box2D().then(function(Box2D) {
     var coverText = [];
     var coverButton;
     var coverOff= false;
+    var UI;
+    var UIBlackground;
+    var UISlingshot;
+    var UIBrick = [];
+    var UIPointer;
+    var UIPointer2;
+    var UITime = 0;
+    var UITime3 = 0;
+    var UITime5 = 0;
+    var UIArrow = [];
+    var UISlingshot2;
+    var UISlingshot3;
    
     function resetAll(){
         
@@ -248,6 +260,7 @@ Box2D().then(function(Box2D) {
 
     function actionOnClick(){
         covers.visible = false;
+        //console.log("happened");
         //resetAll();
         coverOff = true;
     }
@@ -267,6 +280,9 @@ Box2D().then(function(Box2D) {
       this.load.image('black', 'assets/black.png');
       this.load.image('coverPage', 'assets/desert.png');
       this.load.image('button', 'assets/button.png');
+      this.load.image('blackground', 'assets/blackground.png');
+      this.load.image('UIPointer', 'assets/UIpointer.png');
+      this.load.image('UIArrow', 'assets/arrow.png');
     }
 
     function enableBox2D(sprite,movable,position,type) {
@@ -488,11 +504,39 @@ Box2D().then(function(Box2D) {
         coverText[0] = game.add.text(150,1000, 'Defense of\n',{align:'left',boundsAlignH:'center',boundsAlignV:'middle',fontSize: '80px', fill: '#045' }, covers);
         coverText[1] = game.add.text(200,1100, 'Piggy',{align:'left',boundsAlignH:'center',boundsAlignV:'middle',fontSize: '120px', fill: '#065' }, covers);
         coverText[1].angle = 5;
-        coverButton = game.add.button(450, 1450, 'button', actionOnClick, this, 2, 1, 0);
-        coverButton.scale.set(-0.35,-0.35);
-        covers.add(coverButton);
-        //coverButton.anchor.set(-0.5);
+        
+        //coverButton.inputEnabled = true;
+        //coverButton.events.onInputDown.add(actionOnClick2,this);
+        coverButton = covers.create(450, 1350, 'button');
+        coverButton.scale.set(0.35,0.35);
+        //coverButton.off = false;
+        coverButton.anchor.set(0.5);
 
+        UI = game.add.group();
+        UIBlackground = UI.create(30, 50, 'blackground');
+        UIBlackground.alpha = 0.38;
+        UIBlackground.anchor.set(0);
+        UIBlackground.width = game.world.width-100;
+        UIBlackground.height = 350;
+        UISlingshot = UI.create(430,UIBlackground.y+UIBlackground.height,'slingshot');
+        UISlingshot.anchor.set(1);
+        UIBrick[0] =UI.create(UISlingshot.x-400, UIBlackground.y+UIBlackground.height/2, 'box');
+        UIPointer = UI.create(UISlingshot.x-420, UIBlackground.y+UIBlackground.height/2, 'UIPointer');
+        UIPointer.scale.set(0.17);
+        UIArrow[0] = UI.create(UISlingshot.x+300,UIPointer.y,'UIArrow');
+        UIArrow[0].scale.set(0.5);
+        UIArrow[0].anchor.set(0.5);
+        UISlingshot2 = UI.create(UIArrow[0].x+300,UIBlackground.y+UIBlackground.height,'slingshot');
+        UISlingshot2.anchor.set(1);
+        UIBrick[1] = UI.create(UISlingshot2.x-100, UISlingshot2.y-230, 'box');
+        UIArrow[1] = UI.create(UISlingshot2.x+300,UIPointer.y,'UIArrow');
+        UIArrow[1].scale.set(0.5);
+        UIArrow[1].anchor.set(0.5);
+        UISlingshot3 = UI.create(UIArrow[1].x+300,UIBlackground.y+UIBlackground.height,'slingshot');
+        UISlingshot3.anchor.set(1);
+        UIBrick[2] = UI.create(UISlingshot3.x-100, UISlingshot3.y-230, 'box');
+        UIPointer2 = UI.create(UIBrick[2].x - 20, UIBrick[2].y, 'UIPointer');
+        UIPointer2.scale.set(0.17);
     }
     
     function toggle() {
@@ -566,9 +610,90 @@ function update() {
             game.camera.x += 4;
         }
     }*/
-    //coverButton.inputEnabled = true;
-    //coverButton.events.onInputDown.add(actionOnClick2,this);
-    
+
+    /*UISlingshot = UI.create(430,UIBlackground.y+UIBlackground.height,'slingshot');
+        UISlingshot.anchor.set(1);
+        UIBrick =UI.create(UISlingshot.x-40, UIBlackground.y+UIBlackground.height/2, 'box');
+        UIPointer = UI.create(UISlingshot.x-60, UIBlackground.y+UIBlackground.height/2, 'UIPointer');
+        UIPointer.scale.set(0.17);*/
+    UITime = UITime + game.time.physicsElapsed;
+    var UITime2 = UITime/4;
+    if(UITime2<=1){
+        var startX = UISlingshot.x-400;
+        var startY = UIBlackground.y+UIBlackground.height/2;
+        var endX = UISlingshot.x-UISlingshot.width/2-50;
+        var endY =UISlingshot.y - 250;
+        var bezierX = (startX + endX)/2 - 200;
+        var bezierY = (startY + endY)/2 - 300;
+        var x = (1 - UITime2)*(1 - UITime2)*startX + 2*(1-UITime2)*UITime2*bezierX+UITime2*UITime2*endX;
+        var y = (1 - UITime2)*(1 - UITime2)*startY + 2*(1-UITime2)*UITime2*bezierY+UITime2*UITime2*endY;
+        UIBrick[0].x = x;
+        UIBrick[0].y = y;
+        UIPointer.y = UIBrick[0].y;
+        UIPointer.x = UIBrick[0].x -20;
+    }
+    else{
+        UITime = 0;
+    }
+
+    UITime3 = UITime3 + game.time.physicsElapsed;
+    var UITime4 = UITime3/2;
+        
+    if(UITime4<1){
+        var startX2 = UISlingshot3.x-100;
+        var startY2 = UISlingshot3.y-230;
+        var endX2 = startX2 - 100;
+        var endY2 = startY2 + 90;
+        //var bezierX2 = (startX + endX)/2 - 200;
+        //var bezierY2 = (startY + endY)/2 - 300;
+        var x2 = startX2 + UITime3*(endX2 - startX2);
+        var y2 =  startY2 + UITime3*(endY2 - startY2);
+        UIBrick[2].x = x2;
+        UIBrick[2].y = y2;
+        UIPointer2.y = UIBrick[2].y;
+        UIPointer2.x = UIBrick[2].x -20;
+    }
+    else{
+        //console.log("1");
+        UITime5 = UITime5 + game.time.physicsElapsed;
+        if(UITime5<1){
+            var startX3 = UISlingshot3.x-100- 100;
+            var startY3 = UISlingshot3.y-230 + 90;
+            var endX3 = startX3 + 600;
+            var endY3 = startY3 - 100;
+            var bezierX2 = (startX3 + endX3)/2 - 200;
+            var bezierY2 = (startY3 + endY3)/2 - 200;
+            var x3 = (1 - UITime5)*(1 - UITime5)*startX3 + 2*(1-UITime5)*UITime5*bezierX2+UITime5*UITime5*endX3;
+            var y3 = (1 - UITime5)*(1 - UITime5)*startY3 + 2*(1-UITime5)*UITime5*bezierY2+UITime5*UITime5*endY3;
+            UIBrick[2].x = x3;
+            UIBrick[2].y = y3;
+            //console.log("2");
+        }
+        else{
+            UITime3 = 0;
+            //console.log("3");
+            UITime5 = 0;
+        }
+    }
+
+
+
+    if(covers.visible === true){
+        if(game.input.activePointer.isDown&&!lastFrameDown){
+            //console.log(pointerWorldX());
+            //console.log(coverButton.x+coverButton.width/2);
+            //console.log(coverButton.x-coverButton.width/2);
+            //console.log(pointerWorldY());
+            //console.log(coverButton.height/2);
+            if(pointerWorldX()<coverButton.x+coverButton.width/2&&pointerWorldX()>coverButton.x-coverButton.width/2&&pointerWorldY()>coverButton.y-coverButton.height/2&&
+                pointerWorldY()<coverButton.y+coverButton.height/2){
+                actionOnClick();
+            actionOnClick();
+            //console.log("hi");
+            }
+        }
+    }
+
     if(!game.input.activePointer.isDown){
         world.Step(1.0/60.0, 3, 3);
     }
