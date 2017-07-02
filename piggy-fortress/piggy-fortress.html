@@ -54,7 +54,7 @@ Box2D().then(function(Box2D) {
     var needToKill = [];
     var invincible = false;
     var TIMEFORBUILDING = 2;
-    var TIMEFORFIGHTING = 1000;
+    var TIMEFORFIGHTING = 10;
     var playerToDisplay = 0;
     var brickName = 1;
     var onTheSlingshot;
@@ -135,14 +135,25 @@ Box2D().then(function(Box2D) {
     var UITime = 0;
     var UITime3 = 0;
     var UITime5 = 0;
+    var UITime6 = 0;
     var UIArrow = [];
     var UISlingshot2;
     var UISlingshot3;
+    var UIBlackground2;
+    var instruction;
+    var instruction_text;
+    var instruction_picture;
+    var instruction_pointer;
+    var instruction_brick;
+    var cameraStop = false;
    
     function resetAll(){
         
         for(var i = boxes.children.length-1;i>=0;--i){
             boxes.children[i].destroy();
+        }
+        for(var i = piggies.children.length-1;i>=0;--i){
+            piggies.children[i].destroy();
         }
         
         for(var i = 0; i<2;i++){
@@ -150,12 +161,11 @@ Box2D().then(function(Box2D) {
                 blocksLeft[i][j]= 20 ; 
             }
             blocksLeft[i][4] = 5;
+            console.log('HI');
         }
         reround();
 
-        for(var i = piggies.children.length-1;i>=0;--i){
-            piggies.children[i].destroy();
-        }
+
         
         for(var i=0;i<5;i++){
             piggy = piggies.create(620,slingShotY+i*20,'piggy');
@@ -175,7 +185,9 @@ Box2D().then(function(Box2D) {
             piggy.movable = true;
             piggy.owner = 1;
         }
-
+        instruction.visible = false;
+        timeCount.text = 'Ready? Start!';
+        console.log('restart'+blocksLeft[0][4]);
     }
 
     //var initialCameraX = game.camera.x;
@@ -184,15 +196,19 @@ Box2D().then(function(Box2D) {
         game.camera.scale.y = 1;
         game.camera.x = 0;
         game.camera.y = 1100;
+        time = 0;
         timeArray[0] = 0;
         timeArray[1] = 0;
         timeArray[2] = 0; 
         timeArray[3] = 0;
         whoTurn = "player";
-        start.visible = true;
-        start.scale.set(1);
         invincible = false;
         game.camera.y = 910;
+        timeCount.fontSize = '30px';
+        timeCount.fill ='black';
+        UI.visible = true;
+        timeCount.text = 'Ready? Next round!';
+        console.log('reround'+cameraStop);
     }
     
     function meterToPixel(meter){
@@ -260,9 +276,12 @@ Box2D().then(function(Box2D) {
 
     function actionOnClick(){
         covers.visible = false;
+        cameraStop = false;
         //console.log("happened");
         //resetAll();
         coverOff = true;
+        console.log('onclick'+cameraStop);
+
     }
 
     //function actionOnClick2(sprite,pointer){
@@ -283,6 +302,7 @@ Box2D().then(function(Box2D) {
       this.load.image('blackground', 'assets/blackground.png');
       this.load.image('UIPointer', 'assets/UIpointer.png');
       this.load.image('UIArrow', 'assets/arrow.png');
+      this.load.image('instruction', 'assets/instruction.png');
     }
 
     function enableBox2D(sprite,movable,position,type) {
@@ -464,9 +484,8 @@ Box2D().then(function(Box2D) {
             icon.width = BLOCK_TYPES[i].width*0.5;
         }
         boxes = game.add.group();
-        start = game.add.text(100, 1100, 'Player1\nStart to build your fortress!',{align:'left',boundsAlignH:'center',boundsAlignV:'middle',fontSize: '50px', fill: '#000' });
-        timeCount = game.add.text(20, 20, 'time:  ',{align:'left',boundsAlignH:'center',boundsAlignV:'middle',fontSize: '50px', fill: '#000' });
-        timeCount.fixedToCamera = true
+        /*start = game.add.text(100, 1100, 'Player1\nStart to build your fortress!',{align:'left',boundsAlignH:'center',boundsAlignV:'middle',fontSize: '50px', fill: '#000' });*/
+        
         piggies = game.add.group();
         game.camera.y = 910;
         for(var i=0;i<5;i++){
@@ -496,24 +515,10 @@ Box2D().then(function(Box2D) {
         leftNum[5] = game.add.text(blacks.children[5].x-20,blacks.children[5].y-20, 'Drag\nMode',{align:'left',boundsAlignH:'center',boundsAlignV:'middle',fontSize: '20px', fill: '#000' }, blacks);
         
         
-        covers = game.add.group();
-        cover = covers.create(-100,900,'coverPage');
-        cover.anchor.set(0);
-        cover.width = 1100;
-        cover.height = 630;
-        coverText[0] = game.add.text(150,1000, 'Defense of\n',{align:'left',boundsAlignH:'center',boundsAlignV:'middle',fontSize: '80px', fill: '#045' }, covers);
-        coverText[1] = game.add.text(200,1100, 'Piggy',{align:'left',boundsAlignH:'center',boundsAlignV:'middle',fontSize: '120px', fill: '#065' }, covers);
-        coverText[1].angle = 5;
         
-        //coverButton.inputEnabled = true;
-        //coverButton.events.onInputDown.add(actionOnClick2,this);
-        coverButton = covers.create(450, 1350, 'button');
-        coverButton.scale.set(0.35,0.35);
-        //coverButton.off = false;
-        coverButton.anchor.set(0.5);
 
         UI = game.add.group();
-        UIBlackground = UI.create(30, 50, 'blackground');
+        UIBlackground = this.add.sprite(30, 50, 'blackground');
         UIBlackground.alpha = 0.38;
         UIBlackground.anchor.set(0);
         UIBlackground.width = game.world.width-100;
@@ -537,6 +542,39 @@ Box2D().then(function(Box2D) {
         UIBrick[2] = UI.create(UISlingshot3.x-100, UISlingshot3.y-230, 'box');
         UIPointer2 = UI.create(UIBrick[2].x - 20, UIBrick[2].y, 'UIPointer');
         UIPointer2.scale.set(0.17);
+        instruction = game.add.group();
+        UIBlackground2 = instruction.create(10, 10, 'blackground');
+        UIBlackground2.alpha = 0.38;
+        UIBlackground2.anchor.set(0);
+        UIBlackground2.width = 780;
+        UIBlackground2.height = 130;
+        instruction.fixedToCamera = true;
+        instruction_picture = instruction.create(530,25,'instruction');
+        instruction_picture.scale.set(0.15);
+        instruction_picture.alpha = 1;
+        instruction_brick = instruction.create(instruction_picture.x-15+18, instruction_picture.y+80, 'box');
+        instruction_brick.scale.set(0.2);
+        instruction_pointer = instruction.create(instruction_picture.x-15, instruction_picture.y+80, 'UIPointer');
+        instruction_pointer.scale.set(0.05);
+        instruction.visible = false;
+        timeCount = game.add.text(20, 20, 'Ready? Start!',{align:'left',boundsAlignH:'center',boundsAlignV:'middle',fontSize: '30px', fill: '#000' });
+        timeCount.fixedToCamera = true;
+        covers = game.add.group();
+        cover = covers.create(-100,900,'coverPage');
+        cover.anchor.set(0);
+        cover.width = 1100;
+        cover.height = 630;
+        coverText[0] = game.add.text(150,1000, 'Defense of\n',{align:'left',boundsAlignH:'center',boundsAlignV:'middle',fontSize: '80px', fill: '#045' }, covers);
+        coverText[1] = game.add.text(200,1100, 'Piggy',{align:'left',boundsAlignH:'center',boundsAlignV:'middle',fontSize: '120px', fill: '#065' }, covers);
+        coverText[1].angle = 5;
+        
+        //coverButton.inputEnabled = true;
+        //coverButton.events.onInputDown.add(actionOnClick2,this);
+        coverButton = covers.create(450, 1350, 'button');
+        coverButton.scale.set(0.35,0.35);
+        //coverButton.off = false;
+        coverButton.anchor.set(0.5);
+        
     }
     
     function toggle() {
@@ -675,11 +713,30 @@ function update() {
             UITime5 = 0;
         }
     }
-
+    UITime6 = UITime6 + game.time.physicsElapsed;
+    //instruction_picture.x-15+18, instruction_picture.y+80,
+    var UITime7 = UITime6/2;
+    if(UITime7<1){
+        var startX4 = instruction_picture.x-15+18;
+        var startY4 = instruction_picture.y+80;
+        var endX4 = startX4 + 100;
+        var endY4 = startY4 - 68;
+        //var bezierX2 = (startX + endX)/2 - 200;
+        //var bezierY2 = (startY + endY)/2 - 300;
+        var x4 = startX4 + UITime7*(endX4 - startX4);
+        var y4 =  startY4 + UITime7*(endY4 - startY4);
+        instruction_brick.x = x4;
+        instruction_brick.y = y4;
+        instruction_pointer.y = instruction_brick.y;
+        instruction_pointer.x = instruction_brick.x -18;
+    }
+    else if(UITime7 >1.5){
+        UITime6 = 0;
+    }
 
 
     if(covers.visible === true){
-        if(game.input.activePointer.isDown&&!lastFrameDown){
+        if(game.input.activePointer.isDown){
             //console.log(pointerWorldX());
             //console.log(coverButton.x+coverButton.width/2);
             //console.log(coverButton.x-coverButton.width/2);
@@ -842,23 +899,20 @@ function update() {
     }
 
     
-    time = time + game.time.physicsElapsed;
+    if(coverOff){
+        time = time + game.time.physicsElapsed;
+    }
     //timeCount.text = 'time:'+Math.floor(time);
-    if(time >= 2&&coverOff){
+    if(time >= 2&&!cameraStop){
         if ( Math.floor(TIMEFORBUILDING-timeArray[0])>0){
+            instruction.visible = true;
             playerToDisplay = 0;
-            if(startScale>0){
-                start.scale.set(startScale);
-                startScale= startScale - 0.05;
-            }
-            else{
-                start.visible = false;
                 if(Math.floor(TIMEFORBUILDING-timeArray[0])>0){
                     timeArray[0] +=  game.time.physicsElapsed;
-                    timeCount.text = 'time:'+ Math.floor(TIMEFORBUILDING-timeArray[0]);
+                    timeCount.text = 'Build fortress to defend your piggy\nfrom the other side.\nPLAYER1\'s turn (time left): '+ Math.floor(TIMEFORBUILDING-timeArray[0]);
                     playerToDisplay = 0;
                 }
-            }
+            
         }
         else if (Math.floor(TIMEFORBUILDING-timeArray[1])>0){
 
@@ -872,12 +926,14 @@ function update() {
 
                // console.log(timeArray[1]);
                 timeArray[1] +=  game.time.physicsElapsed;
-                timeCount.text = 'time:'+ Math.floor(TIMEFORBUILDING-timeArray[1]);
+                timeCount.text = 'Build fortress to defend your piggy\nfrom the other side.\nPLAYER2\'s turn (time left): '+ Math.floor(TIMEFORBUILDING-timeArray[1]);
                 playerToDisplay = 1;
             }
         }
         else {
+            instruction.visible = false
             playerToDisplay = 1;
+            timeCount.text = '';
             if(game.camera.scale.x > 0.35){
                 game.camera.scale.x -= 0.003;
                 game.camera.scale.y = game.camera.scale.x ;
@@ -900,8 +956,20 @@ function update() {
                 playerToDisplay = 0;
                  whoTurn = "player1";
                  timeArray[2] +=  game.time.physicsElapsed;
-                 timeCount.text = 'time:'+ Math.floor(TIMEFORFIGHTING-timeArray[2]);
+                 timeCount.text = 'Throw the materials to kill your rival\'s piggy. It\'s PLAYER1\'s turn (left) :'+ Math.floor(TIMEFORFIGHTING-timeArray[2]);
+                 timeCount.fill = 'white';
+                 timeCount.fontSize = '60px';
                  //console.log(Math.floor(5-timeArray[2]));
+                 invincible = true;
+                 
+            }
+            else if(Math.floor(5-timeArray[4])>0){
+                playerToDisplay = 1;
+                whoTurn = "player";
+                 timeArray[4] +=  game.time.physicsElapsed;
+                 timeCount.text = 'Side change: PLAYER2, ready?';
+                 timeCount.fill = 'white';
+                 timeCount.fontSize = '60px';
                  invincible = true;
                  
             }
@@ -909,7 +977,9 @@ function update() {
                 playerToDisplay = 1;
                 whoTurn = "player2";
                  timeArray[3] +=  game.time.physicsElapsed;
-                 timeCount.text = 'time:'+ Math.floor(TIMEFORFIGHTING-timeArray[3]);
+                 timeCount.text = 'Throw the materials to kill your rival\'s piggy. It\'s PLAYER2\'s turn (right) :'+ Math.floor(TIMEFORFIGHTING-timeArray[3]);
+                 timeCount.fill = 'white';
+                 timeCount.fontSize = '60px';
                  invincible = true;
                  
             }
@@ -1029,11 +1099,46 @@ function update() {
         needToKill[i].destroy();
     }
 
-    if(blocksLeft[0][4]===0 ||blocksLeft[1][4]===0){
+    /*if(blocksLeft[0][4]===0 ||blocksLeft[1][4]===0){
         covers.visible = true;
         coverOff = false;
         resetAll();
+    }*/
+
+    if(blocksLeft[0][4] === 0 ){
+        UI.visible = false;
+        timeCount.text = 'PLayer2 win! Press \'Q\' to restart';
+        cameraStop = true;
+        if(this.input.keyboard.isDown(Phaser.Keyboard.Q)){
+            covers.visible = true;
+            coverOff = false;
+            resetAll();
+        }
+
     }
+
+
+    if(blocksLeft[1][4] === 0 ){
+        UI.visible = false;
+        timeCount.text = 'PLayer1 win! Press \'Q\' to restart';
+        cameraStop = true;
+        if(this.input.keyboard.isDown(Phaser.Keyboard.Q)){
+            covers.visible = true;
+            coverOff = false;
+            resetAll();
+        }
+
+    }
+
+
+    /*if(blocksLeft[1][4] === 0||blocksLeft[0][4] === 0||covers.visible === true){
+        cameraStop = true;
+    }
+    else{
+        cameraStop = false;
+    }*/
+
+
     
     needToKill = [];
     
