@@ -65,6 +65,8 @@ Box2D().then(function(Box2D) {
             20,
             20,
             5,
+            20,
+            20,
             20
         ],
         [
@@ -73,6 +75,8 @@ Box2D().then(function(Box2D) {
             20,
             20,
             5,
+            20,
+            20,
             20
         ],
     ];
@@ -111,10 +115,26 @@ Box2D().then(function(Box2D) {
         },
         {
             texture: 'triangle',
-            height: 50*Math.sqrt(3),
-            width: 100,
+            height: 30*Math.sqrt(3),
+            width: 110,
             density: 5,
             brickName : 5,
+            blocksLeft:20
+        },
+        {
+            texture: 'ice',
+            height: 30,
+            width: 30,
+            density: 3,
+            brickName : 6,
+            blocksLeft:20
+        },
+        {
+            texture: 'ice2',
+            height: 60,
+            width: 60,
+            density: 3,
+            brickName : 7,
             blocksLeft:20
         },
     ]
@@ -160,6 +180,7 @@ Box2D().then(function(Box2D) {
     var points = [];
     var triangles;
     var triangle;
+    var texture;
 
    function createPolygonShape(vertices) {
     var shape = new Box2D.b2PolygonShape();
@@ -193,6 +214,8 @@ Box2D().then(function(Box2D) {
             }
             blocksLeft[i][4] = 5;
             blocksLeft[i][5] = 20;
+            blocksLeft[i][6] = 20;
+            blocksLeft[i][7] = 20;
             //console.log('HI');
         }
         reround();
@@ -336,6 +359,8 @@ Box2D().then(function(Box2D) {
       this.load.image('UIArrow', 'assets/arrow.png');
       this.load.image('instruction', 'assets/instruction.png');
       this.load.image('triangle', 'assets/triangle.png');
+      this.load.image('ice', 'assets/ice.png');
+      this.load.image('ice2', 'assets/ice2.png');
     }
 
     function enableBox2D(sprite,movable,position,type) {
@@ -536,7 +561,7 @@ Box2D().then(function(Box2D) {
         blacks = game.add.group();
         
         blacks.fixedToCamera = true;
-        for(var j = 38,i=0 ;i < 7;i++){
+        for(var j = 38,i=0 ;i < 9;i++){
             black = blacks.create(j,525,'black');
             black.scale.set(0.2);
             black.anchor.set(0.5);
@@ -549,11 +574,16 @@ Box2D().then(function(Box2D) {
             icon.height = BLOCK_TYPES[i].height*0.5;
             icon.width = BLOCK_TYPES[i].width*0.5;
         }
-        icon = blacks.create(blacks.children[6].x,blacks.children[6].y,'triangle');
+        for(var i =6;i<9;i++){
+        icon = blacks.create(blacks.children[i].x,blacks.children[i].y,BLOCK_TYPES[i-2].texture);
         icon.anchor.set(0.5);
-        icon.height = BLOCK_TYPES[4].height*0.5;
-        icon.width = BLOCK_TYPES[4].width*0.5;
+        icon.height = BLOCK_TYPES[i-2].height*0.5;
+        icon.width = BLOCK_TYPES[i-2].width*0.5;
+        }
+        
+        
         boxes = game.add.group();
+
         /*start = game.add.text(100, 1100, 'Player1\nStart to build your fortress!',{align:'left',boundsAlignH:'center',boundsAlignV:'middle',fontSize: '50px', fill: '#000' });*/
         
         piggies = game.add.group();
@@ -584,6 +614,8 @@ Box2D().then(function(Box2D) {
         leftNum[4] = game.add.text(blacks.children[4].x-20,blacks.children[4].y-20, 'Delete\nMode',{align:'left',boundsAlignH:'center',boundsAlignV:'middle',fontSize: '20px', fill: '#000' }, blacks);
         leftNum[5] = game.add.text(blacks.children[5].x-20,blacks.children[5].y-20, 'Drag\nMode',{align:'left',boundsAlignH:'center',boundsAlignV:'middle',fontSize: '20px', fill: '#000' }, blacks);
         leftNum[6] = game.add.text(blacks.children[6].x,blacks.children[6].y, '',{align:'left',boundsAlignH:'center',boundsAlignV:'middle',fontSize: '40px', fill: '#000' }, blacks);
+        leftNum[7] = game.add.text(blacks.children[7].x,blacks.children[7].y, '',{align:'left',boundsAlignH:'center',boundsAlignV:'middle',fontSize: '40px', fill: '#000' }, blacks);
+        leftNum[8] = game.add.text(blacks.children[8].x,blacks.children[8].y, '',{align:'left',boundsAlignH:'center',boundsAlignV:'middle',fontSize: '40px', fill: '#000' }, blacks);
         
         
         
@@ -698,6 +730,8 @@ Box2D().then(function(Box2D) {
         leftNum[2].text = blocksLeft[playerToDisplay][2];
         leftNum[3].text = blocksLeft[playerToDisplay][3];
         leftNum[6].text = blocksLeft[playerToDisplay][5];
+        leftNum[7].text = blocksLeft[playerToDisplay][6];
+        leftNum[8].text = blocksLeft[playerToDisplay][7];
     }
     
 function update() {
@@ -834,6 +868,7 @@ function update() {
         piggyIsThere = false;
         state = "regular";
         brickName = BLOCK_TYPES[0].brickName;
+        texture = BLOCK_TYPES[0].texture;
      }
      if (ifOnTheSprite(game.input.activePointer.x,game.input.activePointer.y, blacks.children[1])&&game.input.activePointer.isDown&&!lastFrameDown){
         height = BLOCK_TYPES[1].height;
@@ -841,6 +876,7 @@ function update() {
         piggyIsThere = false;
         state = "regular";
         brickName = BLOCK_TYPES[1].brickName;
+        texture = BLOCK_TYPES[1].texture;
      }
      if (ifOnTheSprite(game.input.activePointer.x,game.input.activePointer.y, blacks.children[2])&&game.input.activePointer.isDown&&!lastFrameDown){
         height = BLOCK_TYPES[2].height;
@@ -848,6 +884,7 @@ function update() {
         piggyIsThere = false;
         state = "regular";
         brickName = BLOCK_TYPES[2].brickName;
+          texture = BLOCK_TYPES[2].texture;
      }
      if (ifOnTheSprite(game.input.activePointer.x,game.input.activePointer.y, blacks.children[3])&&game.input.activePointer.isDown&&!lastFrameDown){
         height = BLOCK_TYPES[3].height;
@@ -855,6 +892,7 @@ function update() {
         piggyIsThere = false;
         state = "regular";
         brickName = BLOCK_TYPES[3].brickName;
+          texture = BLOCK_TYPES[3].texture;
      }
      if (ifOnTheSprite(game.input.activePointer.x,game.input.activePointer.y, blacks.children[6])&&game.input.activePointer.isDown&&!lastFrameDown){
         height = BLOCK_TYPES[4].height;
@@ -862,6 +900,25 @@ function update() {
         piggyIsThere = false;
         state = "regular";
         brickName = BLOCK_TYPES[4].brickName;
+          texture = BLOCK_TYPES[4].texture;
+        //console.log(blocksLeft[playerToDisplay][brickName]);
+     }
+     if (ifOnTheSprite(game.input.activePointer.x,game.input.activePointer.y, blacks.children[7])&&game.input.activePointer.isDown&&!lastFrameDown){
+        height = BLOCK_TYPES[5].height;
+        width = BLOCK_TYPES[5].width;
+        piggyIsThere = false;
+        state = "regular";
+        brickName = BLOCK_TYPES[5].brickName;
+          texture = BLOCK_TYPES[5].texture;
+        //console.log(blocksLeft[playerToDisplay][brickName]);
+     }
+     if (ifOnTheSprite(game.input.activePointer.x,game.input.activePointer.y, blacks.children[8])&&game.input.activePointer.isDown&&!lastFrameDown){
+        height = BLOCK_TYPES[6].height;
+        width = BLOCK_TYPES[6].width;
+        piggyIsThere = false;
+        state = "regular";
+        brickName = BLOCK_TYPES[6].brickName;
+          texture = BLOCK_TYPES[6].texture;
         //console.log(blocksLeft[playerToDisplay][brickName]);
      }
      
@@ -869,9 +926,9 @@ function update() {
      if(blocksLeft[playerToDisplay][brickName]>0&&state === "regular"){
          //10,1595
          //console.log(ifOnTheSprite(game.input.activePointer.x,game.input.activePointer.y, blacks.children[6]));
-        if(ifOnTheSprite(game.input.activePointer.x,game.input.activePointer.y, blacks.children[0])||ifOnTheSprite(game.input.activePointer.x,game.input.activePointer.y, blacks.children[1])||ifOnTheSprite(game.input.activePointer.x,game.input.activePointer.y, blacks.children[2])||ifOnTheSprite(game.input.activePointer.x,game.input.activePointer.y, blacks.children[3])){
+        if(ifOnTheSprite(game.input.activePointer.x,game.input.activePointer.y, blacks.children[0])||ifOnTheSprite(game.input.activePointer.x,game.input.activePointer.y, blacks.children[1])||ifOnTheSprite(game.input.activePointer.x,game.input.activePointer.y, blacks.children[2])||ifOnTheSprite(game.input.activePointer.x,game.input.activePointer.y, blacks.children[3])||ifOnTheSprite(game.input.activePointer.x,game.input.activePointer.y, blacks.children[7])||ifOnTheSprite(game.input.activePointer.x,game.input.activePointer.y, blacks.children[8])){
              if(tellPointerCondition()&&(!piggyIsThere)){
-                box = boxes.create(pointerWorldX(),pointerWorldY(),'box');
+                box = boxes.create(pointerWorldX(),pointerWorldY(),texture);
                 box.anchor.set(0.5);
                 box.height = height;
                 box.width = width;
